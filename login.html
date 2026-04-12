@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login | SkillPace</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: linear-gradient(135deg, #0f172a, #1e3a8a);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.card {
+  background: white;
+  padding: 50px;
+  border-radius: 10px;
+  width: 350px;
+}
+
+input {
+  width: 70%;
+  padding: 10px;
+  margin: 10px 0;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+button {
+  width: 30%;
+  padding: 12px;
+  background: #1e3a8a;
+  color: white;
+  border: none;
+  display:block;
+  margin-left: auto;
+  margin-right: auto;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <h2>Login</h2>
+
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="pass" placeholder="Password">
+
+  <button onclick="login()">Login</button>
+
+  <p>Don't have an account? <a href="register.html">Register</a></p>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBKeRzaLsLzLajQ6DrO_wyIJTFO31fSZtU",
+  authDomain: "skillpace-36741.firebaseapp.com",
+  databaseURL: "https://skillpace-36741-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "skillpace-36741",
+  storageBucket: "skillpace-36741.firebasestorage.app",
+  messagingSenderId: "680592513115",
+  appId: "1:680592513115:web:7a67b2ea17fa0a888dc77e",
+  measurementId: "G-F8PQBFMY1M"
+};
+
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+window.login = async function() {
+  const email = document.getElementById("email").value;
+  const pass = document.getElementById("pass").value;
+
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+    window.location.href = "home.html";
+  } catch (e) {
+    alert(e.message);
+  }
+};
+</script>
+
+</body>
+</html>

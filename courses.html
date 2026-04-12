@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillPace – Courses</title>
+  <style>
+    :root {
+      --gold: #FBC156;
+      --navy: #1e293b;
+      --border: #E5E7EB;
+      --muted: #6B7280;
+      --green: #16A34A;
+      --red: #DC2626;
+      --sidebar-collapsed: 90px;
+      --sidebar-expanded: 260px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      background: white; color: black; overflow-x: hidden;
+      padding-left: var(--sidebar-collapsed);
+      transition: padding-left 0.4s ease;
+    }
+
+    /* ─── SIDEBAR ─── */
+    .sidebar-desktop {
+      position: fixed; top: 0; left: 0; height: 100vh;
+      width: var(--sidebar-collapsed);
+      background: #fff; border-right: 1px solid var(--border);
+      box-shadow: 2px 0 15px rgba(0,0,0,0.05);
+      z-index: 1000; transition: width 0.4s cubic-bezier(0.16,1,0.3,1);
+      overflow: hidden; display: flex; flex-direction: column;
+    }
+    .sidebar-desktop:hover { width: var(--sidebar-expanded); }
+    .sidebar-container { display: flex; flex-direction: column; height: 100%; padding: 25px 0; }
+    .sidebar-brand {
+      display: flex; align-items: center; height: 60px; margin-bottom: 40px;
+      width: 100%; justify-content: center; cursor: pointer; position: relative;
+      transition: padding 0.3s ease; text-decoration: none;
+    }
+    .sidebar-brand img { width: 55px; height: 55px; object-fit: contain; transition: all 0.3s ease; }
+    .sidebar-brand span {
+      position: absolute; left: 85px; opacity: 0;
+      font-weight: 800; font-size: 1.4rem; color: var(--navy);
+      transition: opacity 0.2s ease; pointer-events: none; white-space: nowrap;
+    }
+    .sidebar-desktop:hover .sidebar-brand { justify-content: flex-start; padding-left: 17px; }
+    .sidebar-desktop:hover .sidebar-brand img { width: 50px; height: 50px; }
+    .sidebar-desktop:hover .sidebar-brand span { opacity: 1; pointer-events: auto; }
+    .nav-list { list-style: none; display: flex; flex-direction: column; gap: 8px; width: 100%; padding: 0 12px; }
+    .nav-link {
+      display: flex; align-items: center; height: 50px; color: var(--navy); opacity: 0.8;
+      text-decoration: none; font-size: 15px; font-weight: 600;
+      width: 100%; justify-content: center; cursor: pointer; border-radius: 12px;
+      transition: all 0.3s ease;
+    }
+    .nav-link svg { min-width: 24px; width: 24px; height: 24px; stroke: var(--navy); transition: all 0.3s ease; }
+    .nav-text { display: none; white-space: nowrap; margin-left: 16px; opacity: 0; transition: opacity 0.2s; }
+    .sidebar-desktop:hover .nav-link { justify-content: flex-start; padding-left: 18px; }
+    .sidebar-desktop:hover .nav-text { display: block; opacity: 1; transition-delay: 0.1s; }
+    .nav-link:hover { background: rgba(0,0,0,0.05); opacity: 1; }
+    .nav-link.active { opacity: 1; background: rgba(251,193,86,0.1); color: #b27b00; }
+    .nav-link.active svg { stroke: #b27b00; }
+    .nav-link.logout-link:hover { background: rgba(220,38,38,0.07); color: #dc2626; opacity:1; }
+    .nav-link.logout-link:hover svg { stroke: #dc2626; }
+    .sidebar-user { margin-top: auto; padding: 0 12px 10px; width: 100%; }
+    .sidebar-user-inner {
+      display: flex; align-items: center; height: 50px;
+      justify-content: center; border-radius: 12px;
+      background: #f1f5f9; overflow: hidden; transition: all 0.3s ease; margin-bottom: 8px;
+    }
+    .sidebar-desktop:hover .sidebar-user-inner { justify-content: flex-start; padding-left: 18px; }
+    .user-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--navy); color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; font-weight: 800; flex-shrink: 0;
+    }
+    .user-name {
+      display: none; white-space: nowrap; margin-left: 12px;
+      font-size: 0.88rem; font-weight: 700; color: var(--navy);
+      opacity: 0; transition: opacity 0.2s; overflow: hidden;
+      text-overflow: ellipsis; max-width: 140px;
+    }
+    .sidebar-desktop:hover .user-name { display: block; opacity: 1; transition-delay: 0.1s; }
+
+    /* ─── MOBILE ─── */
+    .mobile-header {
+      display: none; padding: 10px 20px;
+      align-items: center; justify-content: space-between;
+      background: #fff; color: var(--navy);
+      position: sticky; top: 0; z-index: 900;
+      border-bottom: 1px solid var(--border);
+    }
+    .mobile-logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.2rem; color: var(--navy); text-decoration: none; }
+    .mobile-logo img { height: 45px; }
+    .hamburger { background: none; border: none; color: var(--navy); cursor: pointer; display: flex; align-items: center; }
+    .mobile-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 1000;
+      opacity: 0; pointer-events: none; transition: 0.3s ease;
+    }
+    .mobile-overlay.show { opacity: 1; pointer-events: auto; }
+    .mobile-sidebar {
+      position: fixed; top: 0; left: -280px; width: 280px; height: 100vh;
+      background: #fff; z-index: 1001; transition: left 0.3s ease;
+      display: flex; flex-direction: column; padding-top: 20px;
+      border-right: 1px solid var(--border);
+    }
+    .mobile-sidebar.open { left: 0; }
+    .mobile-sidebar .nav-list { padding: 0 20px; margin-top: 20px; }
+    .mobile-sidebar .nav-link { justify-content: flex-start; padding-left: 15px; }
+    .mobile-sidebar .nav-text { display: block; opacity: 1; }
+    .close-mobile { position: absolute; top: 20px; right: 20px; background: none; border: none; cursor: pointer; }
+
+    /* ─── AUTH LOADING SCREEN ─── */
+    #auth-loading {
+      position: fixed; inset: 0; background: #fff;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 9999; gap: 16px;
+    }
+    #auth-loading img { width: 70px; height: 70px; object-fit: contain; }
+    #auth-loading p { color: var(--muted); font-size: 0.95rem; font-weight: 600; }
+    .spinner {
+      width: 36px; height: 36px; border: 3px solid var(--border);
+      border-top-color: var(--navy); border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── COURSE GRID ─── */
+    .page-wrap { padding: 40px 24px; max-width: 1200px; margin: 0 auto; }
+    .page-wrap h1 { font-weight: 800; color: var(--navy); font-size: 2.2rem; margin-bottom: 8px; }
+    .page-wrap > p { color: var(--muted); font-size: 1.1rem; margin-bottom: 30px; }
+    .course-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; }
+    .course-card {
+      background: white; border: 1px solid var(--border); border-radius: 12px;
+      overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+      display: flex; flex-direction: column; transition: all 0.3s;
+    }
+    .course-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+    .course-card img { width: 100%; height: 180px; object-fit: cover; }
+    .course-card-body { padding: 20px; display: flex; flex-direction: column; flex: 1; gap: 6px; }
+    .course-card-body h3 { font-size: 1.2rem; font-weight: 700; color: var(--navy); }
+    .course-card-body p { font-size: 0.9rem; color: var(--muted); line-height: 1.6; flex-grow: 1; }
+    .course-duration { font-weight: 700; color: var(--navy); font-size: 0.9rem; margin-bottom: 6px; }
+    .card-progress-row { display: flex; align-items: center; gap: 8px; margin: 4px 0 10px; }
+    .card-prog-track { flex: 1; height: 6px; background: var(--border); border-radius: 9999px; overflow: hidden; }
+    .card-prog-bar { height: 100%; background: var(--navy); border-radius: 9999px; transition: width 0.5s; }
+    .card-prog-label { font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+    .btn-start {
+      width: 100%; background: var(--navy); color: white;
+      border: none; padding: 12px; border-radius: 8px;
+      font-weight: 600; cursor: pointer; font-family: inherit; transition: background 0.2s;
+    }
+    .btn-start:hover { background: #0f172a; }
+    .card-pdf-link {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 9px; border: 1px dashed var(--border); border-radius: 8px;
+      font-size: 0.8rem; font-weight: 600; color: var(--navy);
+      text-decoration: none; transition: background 0.2s, border-color 0.2s; cursor: pointer;
+    }
+    .card-pdf-link:hover { background: #f0f4ff; border-color: var(--navy); }
+    .card-pdf-link.disabled {
+      opacity: 0.45; cursor: not-allowed; pointer-events: none;
+    }
+    .cert-badge {
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      padding: 8px; border-radius: 8px; font-size: 0.8rem; font-weight: 700;
+      background: #FEF9C3; color: #92400E; border: 1px solid #FDE68A;
+    }
+
+    /* ─── PLAYER MODAL ─── */
+    .modal-bg {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.65); z-index: 2000;
+      align-items: flex-start; justify-content: center;
+      overflow-y: auto; padding: 20px;
+    }
+    .modal-bg.open { display: flex; }
+    .player-modal {
+      background: white; border-radius: 16px;
+      width: 100%; max-width: 1200px; margin: auto;
+      overflow: hidden; box-shadow: 0 24px 80px rgba(0,0,0,0.3);
+      display: flex; flex-direction: column;
+    }
+    .player-topbar {
+      background: var(--navy); padding: 14px 20px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .player-topbar h2 { color: white; font-size: 1rem; font-weight: 700; flex: 1; }
+    .topbar-prog-row { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+    .topbar-prog-label { font-size: 0.75rem; color: rgba(255,255,255,0.7); white-space: nowrap; }
+    .prog-track { flex: 1; height: 7px; background: rgba(255,255,255,0.2); border-radius: 9999px; overflow: hidden; }
+    .prog-bar { height: 100%; background: var(--gold); border-radius: 9999px; transition: width 0.4s; }
+    .modal-close {
+      background: rgba(255,255,255,0.15); border: none; color: white;
+      width: 32px; height: 32px; border-radius: 50%; font-size: 1.1rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .modal-close:hover { background: rgba(255,255,255,0.3); }
+    .player-tabs {
+      display: flex; background: #f8faff; border-bottom: 1px solid var(--border); gap: 0;
+    }
+    .player-tab {
+      padding: 11px 20px; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+      color: var(--muted); border-bottom: 3px solid transparent;
+      transition: all 0.2s; background: none; border-top: none; border-left: none; border-right: none;
+      font-family: inherit;
+    }
+    .player-tab.active { color: var(--navy); border-bottom-color: var(--navy); background: white; }
+    .player-tab:hover:not(.active) { color: var(--navy); background: #f0f4ff; }
+    .player-tab .tab-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 18px; height: 18px; border-radius: 50%; font-size: 0.65rem; font-weight: 700;
+      background: var(--border); color: var(--muted); margin-left: 5px;
+    }
+    .player-tab.active .tab-badge { background: var(--navy); color: white; }
+    .player-tab .tab-done { color: var(--green); margin-left: 4px; font-size: 0.75rem; }
+    .player-body {
+      display: grid; grid-template-columns: 1fr 300px; min-height: 560px;
+    }
+    .player-main { padding: 20px 24px; overflow-y: auto; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 16px; }
+    .lesson-header .lesson-title { font-size: 1.15rem; font-weight: 800; color: var(--navy); }
+    .lesson-header .lesson-sub { font-size: 0.82rem; color: var(--muted); margin-top: 3px; }
+    .video-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
+    .video-label span { color: var(--red); }
+    .video-wrap {
+      width: 100%; aspect-ratio: 16/9; border-radius: 10px;
+      overflow: hidden; background: #000; position: relative;
+    }
+    .thumb-overlay {
+      position: absolute; inset: 0; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; background: #000;
+    }
+    .thumb-overlay img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .play-btn-big {
+      position: absolute; width: 64px; height: 64px; border-radius: 50%;
+      background: rgba(200,0,0,0.92); display: flex; align-items: center; justify-content: center;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .thumb-overlay:hover .play-btn-big { background: rgba(200,0,0,1); transform: scale(1.1); }
+    .play-btn-big svg { width: 26px; height: 26px; margin-left: 4px; }
+    .handout-box {
+      background: #F8FAFF; border: 1px solid var(--border); border-radius: 10px; padding: 16px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .handout-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+    .handout-label span { color: #2563eb; }
+    .handout-title { font-size: 0.92rem; font-weight: 700; color: var(--navy); }
+    .handout-text { font-size: 0.83rem; color: #374151; line-height: 1.75; overflow-y: auto; max-height: 120px; padding-right: 4px; }
+    .handout-points { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .handout-points li { font-size: 0.8rem; color: #374151; display: flex; gap: 7px; align-items: flex-start; line-height: 1.5; }
+    .handout-points li::before { content: '→'; color: var(--gold); font-weight: 900; flex-shrink: 0; margin-top: 1px; }
+    .download-btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: var(--navy); color: white; border: none;
+      padding: 9px 16px; border-radius: 8px; font-size: 0.82rem; font-weight: 600;
+      cursor: pointer; text-decoration: none; font-family: inherit;
+      transition: background 0.2s; align-self: flex-start;
+    }
+    .download-btn:hover { background: #0f172a; }
+    .download-btn.no-pdf {
+      background: #e5e7eb; color: var(--muted); cursor: not-allowed; pointer-events: none;
+    }
+    .player-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-complete {
+      background: var(--gold); color: #111; border: none;
+      padding: 9px 18px; border-radius: 8px; font-size: 0.84rem;
+      font-weight: 700; cursor: pointer; font-family: inherit; transition: background 0.2s;
+    }
+    .btn-complete:hover { background: #e8a83c; }
+    .btn-complete.done { background: #DCFCE7; color: var(--green); border: 1px solid #86EFAC; }
+    .prog-row { display: flex; align-items: center; gap: 8px; }
+    .prog-label { font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+    .prog-track-light { flex: 1; height: 7px; background: var(--border); border-radius: 9999px; overflow: hidden; }
+    .prog-bar-navy { height: 100%; background: var(--navy); border-radius: 9999px; transition: width 0.4s; }
+    .player-sidebar { overflow-y: auto; }
+    .sidebar-hdr {
+      padding: 12px 16px; font-size: 0.7rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--muted); background: #F3F4F6;
+      border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 2;
+    }
+    .mod-title {
+      padding: 8px 14px 5px; font-size: 0.68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--muted); background: #FAFAFA; border-bottom: 1px solid var(--border);
+    }
+    .lesson-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 11px 14px; cursor: pointer;
+      border-bottom: 1px solid var(--border); border-left: 3px solid transparent;
+      transition: background 0.15s;
+    }
+    .lesson-item:hover { background: #F0F4FF; }
+    .lesson-item.active { background: #EEF2FF; border-left-color: var(--navy); }
+    .lesson-item.active .li-name { font-weight: 700; color: var(--navy); }
+    .li-icon {
+      width: 22px; height: 22px; border-radius: 50%; background: var(--border);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 1px;
+    }
+    .li-icon.done { background: #DCFCE7; }
+    .li-icon svg { width: 12px; height: 12px; }
+    .li-name { font-size: 0.82rem; line-height: 1.35; }
+    .li-duration { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+
+    /* ─── ASSESS PANELS ─── */
+    .assess-panel { padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+    .assess-card { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: box-shadow 0.2s; }
+    .assess-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.07); }
+    .assess-card-hdr {
+      padding: 14px 18px; display: flex; align-items: center; gap: 12px;
+      background: #F8FAFF; border-bottom: 1px solid var(--border);
+    }
+    .assess-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;
+    }
+    .assess-icon.quiz   { background: #EDE9FE; }
+    .assess-icon.exam   { background: #FEF3C7; }
+    .assess-icon.act    { background: #DCFCE7; }
+    .assess-icon.proj   { background: #DBEAFE; }
+    .assess-card-info { flex: 1; }
+    .assess-card-info h4 { font-size: 0.95rem; font-weight: 700; color: var(--navy); }
+    .assess-card-info p  { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+    .assess-meta { display: flex; gap: 10px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
+    .assess-chip { font-size: 0.72rem; font-weight: 700; padding: 4px 10px; border-radius: 9999px; white-space: nowrap; }
+    .chip-pending { background: #F3F4F6; color: var(--muted); }
+    .chip-pass    { background: #DCFCE7; color: var(--green); }
+    .chip-fail    { background: #FEE2E2; color: var(--red); }
+    .chip-locked  { background: #F3F4F6; color: #9CA3AF; }
+    .assess-score { font-size: 0.85rem; font-weight: 700; color: var(--navy); }
+    .btn-assess {
+      padding: 8px 18px; border-radius: 8px; font-size: 0.82rem; font-weight: 700;
+      cursor: pointer; border: none; font-family: inherit; transition: all 0.2s;
+    }
+    .btn-assess.start  { background: var(--navy); color: white; }
+    .btn-assess.start:hover { background: #0f172a; }
+    .btn-assess.retry  { background: white; color: var(--navy); border: 1px solid var(--border); }
+    .btn-assess.retry:hover { background: #f3f4f6; }
+    .btn-assess.locked { background: #f3f4f6; color: #9ca3af; cursor: not-allowed; }
+    .assess-card-body { padding: 14px 18px; background: white; }
+    .assess-body-note { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+    .submit-area { display: flex; flex-direction: column; gap: 14px; }
+    .submit-area label { font-size: 0.82rem; font-weight: 700; color: var(--navy); display: block; margin-bottom: 5px; }
+    .submit-area textarea {
+      width: 100%; padding: 12px; border: 1.5px solid var(--border); border-radius: 9px;
+      font-size: 0.88rem; font-family: inherit; resize: vertical; min-height: 100px;
+      transition: border-color 0.2s; color: var(--navy);
+    }
+    .submit-area textarea:focus { border-color: var(--navy); }
+    .submit-area input[type="url"] {
+      width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 9px;
+      font-size: 0.88rem; font-family: inherit; transition: border-color 0.2s; color: var(--navy);
+    }
+    .submit-area input[type="url"]:focus { border-color: var(--navy); }
+    .submit-note { font-size: 0.78rem; color: var(--muted); line-height: 1.6; }
+
+    /* ─── CERT SECTION ─── */
+    .cert-section {
+      margin: 0 24px 24px; padding: 20px; border-radius: 12px;
+      background: linear-gradient(135deg, #FEF9C3 0%, #FEF3C7 100%);
+      border: 1.5px solid #FDE68A; display: flex; align-items: center; gap: 16px;
+    }
+    .cert-icon { font-size: 2.5rem; flex-shrink: 0; }
+    .cert-info h4 { font-size: 1rem; font-weight: 800; color: #92400E; margin-bottom: 4px; }
+    .cert-info p { font-size: 0.82rem; color: #78350F; line-height: 1.5; }
+    .cert-info .cert-requirements { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .cert-req-chip {
+      font-size: 0.72rem; font-weight: 700; padding: 3px 9px; border-radius: 9999px;
+      background: white; border: 1px solid #FDE68A; color: #92400E;
+    }
+    .cert-req-chip.met { background: #DCFCE7; border-color: #86EFAC; color: var(--green); }
+    .btn-cert {
+      margin-left: auto; flex-shrink: 0; padding: 10px 20px;
+      background: #92400E; color: white; border: none; border-radius: 9px;
+      font-size: 0.84rem; font-weight: 700; cursor: pointer; font-family: inherit;
+      transition: background 0.2s;
+    }
+    .btn-cert:hover:not(:disabled) { background: #78350F; }
+    .btn-cert:disabled { background: #D97706; opacity: 0.5; cursor: not-allowed; }
+
+    /* ─── QUIZ MODAL ─── */
+    .quiz-modal-bg {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      z-index: 3000; align-items: center; justify-content: center; padding: 20px;
+    }
+    .quiz-modal-bg.open { display: flex; }
+    .quiz-modal {
+      background: white; border-radius: 16px; width: 100%; max-width: 680px;
+      max-height: 90vh; overflow-y: auto; box-shadow: 0 30px 100px rgba(0,0,0,0.3);
+      display: flex; flex-direction: column;
+    }
+    .quiz-hdr {
+      padding: 18px 24px; background: var(--navy); color: white;
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .quiz-hdr h3 { font-size: 1rem; font-weight: 800; }
+    .quiz-hdr span { font-size: 0.82rem; opacity: 0.7; }
+    .quiz-body { padding: 24px; flex: 1; overflow-y: auto; }
+    .quiz-progress-bar { height: 5px; background: var(--border); border-radius: 9999px; overflow: hidden; margin-bottom: 20px; }
+    .quiz-progress-fill { height: 100%; background: var(--gold); border-radius: 9999px; transition: width 0.3s; }
+    .question-num { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 6px; }
+    .question-text { font-size: 1rem; font-weight: 700; color: var(--navy); margin-bottom: 18px; line-height: 1.5; }
+    .options-list { display: flex; flex-direction: column; gap: 10px; }
+    .option-btn {
+      padding: 13px 16px; border: 2px solid var(--border); border-radius: 10px;
+      font-size: 0.88rem; font-weight: 500; cursor: pointer; text-align: left;
+      background: white; font-family: inherit; transition: all 0.15s; color: var(--navy);
+    }
+    .option-btn:hover:not(.selected):not(.correct):not(.wrong) { border-color: var(--navy); background: #f0f4ff; }
+    .option-btn.selected { border-color: var(--navy); background: #EEF2FF; font-weight: 700; }
+    .option-btn.correct  { border-color: var(--green); background: #DCFCE7; color: var(--green); font-weight: 700; }
+    .option-btn.wrong    { border-color: var(--red); background: #FEE2E2; color: var(--red); }
+    .option-btn:disabled { cursor: default; }
+    .quiz-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; gap: 10px; }
+    .btn-quiz-nav { padding: 10px 22px; border-radius: 9px; font-size: 0.85rem; font-weight: 700; cursor: pointer; border: none; font-family: inherit; transition: all 0.2s; }
+    .btn-quiz-nav.primary { background: var(--navy); color: white; }
+    .btn-quiz-nav.primary:hover { background: #0f172a; }
+    .btn-quiz-nav.secondary { background: white; color: var(--navy); border: 1px solid var(--border); }
+    .btn-quiz-nav.secondary:hover { background: #f3f4f6; }
+    .btn-quiz-nav:disabled { opacity: 0.4; cursor: not-allowed; }
+    .quiz-result { text-align: center; padding: 20px 0; }
+    .result-circle {
+      width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; font-weight: 900;
+    }
+    .result-circle.pass { background: #DCFCE7; color: var(--green); border: 4px solid #86EFAC; }
+    .result-circle.fail { background: #FEE2E2; color: var(--red); border: 4px solid #FCA5A5; }
+    .result-title { font-size: 1.3rem; font-weight: 800; color: var(--navy); margin-bottom: 6px; }
+    .result-sub { font-size: 0.9rem; color: var(--muted); margin-bottom: 20px; }
+    .result-stats { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px; }
+    .result-stat { background: #F8FAFF; border: 1px solid var(--border); border-radius: 10px; padding: 12px 20px; text-align: center; }
+    .result-stat .stat-val { font-size: 1.4rem; font-weight: 900; color: var(--navy); }
+    .result-stat .stat-lbl { font-size: 0.72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+
+    /* ─── CERT MODAL ─── */
+    .cert-modal-bg {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+      z-index: 4000; align-items: center; justify-content: center; padding: 20px;
+    }
+    .cert-modal-bg.open { display: flex; }
+    .cert-modal {
+      background: white; border-radius: 16px; width: 100%; max-width: 600px;
+      padding: 40px; text-align: center; box-shadow: 0 30px 100px rgba(0,0,0,0.3);
+    }
+    .cert-modal .cert-trophy { font-size: 4rem; margin-bottom: 12px; }
+    .cert-modal h2 { font-size: 1.6rem; font-weight: 900; color: var(--navy); margin-bottom: 8px; }
+    .cert-modal p { font-size: 0.9rem; color: var(--muted); line-height: 1.7; margin-bottom: 24px; }
+    .cert-modal-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .btn-dl-cert {
+      padding: 12px 28px; background: var(--navy); color: white; border: none;
+      border-radius: 9px; font-size: 0.9rem; font-weight: 700; cursor: pointer;
+      font-family: inherit; transition: background 0.2s;
+    }
+    .btn-dl-cert:hover { background: #0f172a; }
+    .btn-dl-cert.gold { background: #92400E; }
+    .btn-dl-cert.gold:hover { background: #78350F; }
+
+    /* ─── TOAST ─── */
+    #toast {
+      position: fixed; bottom: 30px; right: 30px; z-index: 9999;
+      background: white; border: 1px solid var(--border);
+      border-left: 4px solid var(--gold); border-radius: 10px;
+      padding: 18px 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      opacity: 0; transform: translateY(20px); pointer-events: none;
+      transition: all 0.3s ease; display: flex; align-items: center; gap: 15px;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+    footer { text-align: center; padding: 50px; color: var(--muted); font-size: 0.9rem; border-top: 1px solid var(--border); margin-top: 60px; background: #f9fafb; }
+
+    @media (max-width: 1024px) { .course-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 900px) {
+      body { padding-left: 0; }
+      .sidebar-desktop { display: none; }
+      .mobile-header { display: flex; }
+      .player-body { grid-template-columns: 1fr; }
+      .player-sidebar { border-top: 1px solid var(--border); max-height: 240px; }
+    }
+    @media (max-width: 650px) { .course-grid { grid-template-columns: 1fr; max-width: 420px; } }
+  </style>
+</head>
+<body>
+
+<!-- AUTH LOADING SCREEN -->
+<div id="auth-loading">
+  <img src="https://uploads.onecompiler.io/44hg23thx/44hg24bdt/zxc.png" alt="SkillPace Logo" onerror="this.style.display='none'">
+  <div class="spinner"></div>
+  <p>Loading SkillPace…</p>
+</div>
+
+<!-- MOBILE HEADER -->
+<div class="mobile-header">
+  <a class="mobile-logo" href="home.html">
+    <img src="https://uploads.onecompiler.io/44hg23thx/44hg24bdt/zxc.png" alt="SkillPace Logo" />
+    SkillPace
+  </a>
+  <button class="hamburger" onclick="toggleMobileMenu()">
+    <svg viewBox="0 0 24 24" width="30" height="30" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+</div>
+<div class="mobile-overlay" id="mobileOverlay" onclick="toggleMobileMenu()"></div>
+<div class="mobile-sidebar" id="mobileSidebar">
+  <button class="close-mobile" onclick="toggleMobileMenu()">
+    <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+  <div style="display:flex;align-items:center;gap:12px;padding:0 20px;height:70px;">
+    <img src="https://uploads.onecompiler.io/44hg23thx/44hg24bdt/zxc.png" style="width:50px;height:50px;" alt="Logo">
+    <span style="font-weight:800;font-size:1.3rem;color:var(--navy);">SkillPace</span>
+  </div>
+  <ul class="nav-list">
+    <li><a href="home.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-text">Home</span></a></li>
+    <li><a href="courses.html" class="nav-link active"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span class="nav-text">Courses</span></a></li>
+    <li><a href="tutoring.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="nav-text">Tutoring</span></a></li>
+    <li><a href="connect.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-text">Connect</span></a></li>
+    <li><a href="subscribe.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="nav-text">Subscribe</span></a></li>
+    <li><a href="dashboard.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg><span class="nav-text">Dashboard</span></a></li>
+    <li style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">
+      <a class="nav-link logout-link" onclick="doLogout()" style="cursor:pointer;">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span class="nav-text">Log Out</span>
+      </a>
+    </li>
+  </ul>
+</div>
+
+<!-- DESKTOP SIDEBAR -->
+<aside class="sidebar-desktop">
+  <div class="sidebar-container">
+    <a class="sidebar-brand" href="home.html">
+      <img src="https://uploads.onecompiler.io/44hg23thx/44hg24bdt/zxc.png" alt="Logo">
+      <span>SkillPace</span>
+    </a>
+    <ul class="nav-list">
+      <li><a href="home.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-text">Home</span></a></li>
+      <li><a href="courses.html" class="nav-link active"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span class="nav-text">Courses</span></a></li>
+      <li><a href="tutoring.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="nav-text">Tutoring</span></a></li>
+      <li><a href="connect.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-text">Connect</span></a></li>
+      <li><a href="subscribe.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="nav-text">Subscribe</span></a></li>
+      <li><a href="dashboard.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg><span class="nav-text">Dashboard</span></a></li>
+    </ul>
+    <div class="sidebar-user">
+      <div class="sidebar-user-inner">
+        <div class="user-avatar" id="user-avatar-initials">?</div>
+        <div class="user-name" id="user-display-name">User</div>
+      </div>
+      <a class="nav-link logout-link" onclick="doLogout()" style="cursor:pointer;">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span class="nav-text">Log Out</span>
+      </a>
+    </div>
+  </div>
+</aside>
+
+<!-- COURSE PLAYER MODAL -->
+<div class="modal-bg" id="playerModal">
+  <div class="player-modal">
+    <div class="player-topbar">
+      <h2 id="pm-course-title">Course Title</h2>
+      <div class="topbar-prog-row">
+        <span class="topbar-prog-label" id="pm-prog-text">0% complete</span>
+        <div class="prog-track" style="width:110px;"><div class="prog-bar" id="pm-prog-bar" style="width:0%"></div></div>
+      </div>
+      <button class="modal-close" onclick="closePlayer()">&#x2715;</button>
+    </div>
+    <div class="player-tabs">
+      <button class="player-tab active" id="tab-lessons" onclick="switchTab('lessons')">&#128214; Lessons</button>
+      <button class="player-tab" id="tab-quiz" onclick="switchTab('quiz')">&#128221; Quizzes <span class="tab-badge" id="quiz-badge">0</span></button>
+      <button class="player-tab" id="tab-exam" onclick="switchTab('exam')">&#128203; Exam <span id="exam-done-icon" class="tab-done" style="display:none">&#10003;</span></button>
+      <button class="player-tab" id="tab-activity" onclick="switchTab('activity')">&#128296; Activities <span class="tab-badge" id="act-badge">0</span></button>
+      <button class="player-tab" id="tab-project" onclick="switchTab('project')">&#128640; Project <span id="proj-done-icon" class="tab-done" style="display:none">&#10003;</span></button>
+    </div>
+    <div id="panel-lessons">
+      <div class="player-body">
+        <div class="player-main" id="pm-main-col">
+          <div class="lesson-header">
+            <div class="lesson-title" id="pm-lesson-title">Lesson Title</div>
+            <div class="lesson-sub"   id="pm-lesson-sub">Duration · Course</div>
+          </div>
+          <div>
+            <div class="video-label"><span>&#9654;</span> Video Lesson</div>
+            <div class="video-wrap" id="pm-video-wrap">
+              <div class="thumb-overlay" id="pm-thumb-overlay" onclick="pmPlayVideo()">
+                <img id="pm-vid-thumb" src="" alt="lesson thumbnail" />
+                <div class="play-btn-big">
+                  <svg viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="handout-label"><span>&#128196;</span> Lesson Handout</div>
+            <div class="handout-box">
+              <div class="handout-title" id="pm-handout-title">Lesson Notes</div>
+              <div class="handout-text" id="pm-handout-text">Select a lesson to read its handout.</div>
+              <ul class="handout-points" id="pm-handout-points"></ul>
+              <a id="pm-pdf-btn" href="#" class="download-btn no-pdf" target="_blank">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download Course Handout PDF
+              </a>
+            </div>
+          </div>
+          <div class="player-actions">
+            <button class="btn-complete" id="pm-btn-complete" onclick="pmMarkComplete()">&#10003; Mark as Complete</button>
+          </div>
+          <div class="prog-row">
+            <span class="prog-label">Lesson Progress</span>
+            <div class="prog-track-light"><div class="prog-bar-navy" id="pm-prog-bar-main" style="width:0%"></div></div>
+            <span class="prog-label" id="pm-prog-text-main">0%</span>
+          </div>
+        </div>
+        <div class="player-sidebar">
+          <div class="sidebar-hdr">Course Lessons</div>
+          <div id="pm-lesson-list"></div>
+        </div>
+      </div>
+    </div>
+    <div id="panel-quiz"     style="display:none;"><div class="assess-panel" id="quiz-list-panel"></div></div>
+    <div id="panel-exam"     style="display:none;"><div class="assess-panel" id="exam-panel"></div></div>
+    <div id="panel-activity" style="display:none;"><div class="assess-panel" id="activity-panel"></div></div>
+    <div id="panel-project"  style="display:none;"><div class="assess-panel" id="project-panel"></div></div>
+    <div class="cert-section" id="cert-section">
+      <div class="cert-icon">&#127891;</div>
+      <div class="cert-info">
+        <h4>Certificate of Completion</h4>
+        <p>Complete all lessons, pass all quizzes &amp; the final exam (&#8805;75%), and submit all activities &amp; project.</p>
+        <div class="cert-requirements" id="cert-reqs"></div>
+      </div>
+      <button class="btn-cert" id="btn-get-cert" disabled onclick="openCertModal()">Get Certificate</button>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ / EXAM MODAL -->
+<div class="quiz-modal-bg" id="quizModal">
+  <div class="quiz-modal">
+    <div class="quiz-hdr">
+      <h3 id="qm-title">Quiz</h3>
+      <span id="qm-subtitle">Question 1 of 5</span>
+    </div>
+    <div class="quiz-body">
+      <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="qm-prog" style="width:0%"></div></div>
+      <div id="qm-content"></div>
+      <div class="quiz-nav" id="qm-nav"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CERTIFICATE MODAL -->
+<div class="cert-modal-bg" id="certModal">
+  <div class="cert-modal">
+    <div class="cert-trophy">&#127942;</div>
+    <h2 id="cert-modal-title">Congratulations!</h2>
+    <p id="cert-modal-body">You've successfully completed the course!</p>
+    <div class="cert-modal-actions">
+      <button class="btn-dl-cert gold" onclick="downloadCertificate()">&#11015; Download Certificate</button>
+      <button class="btn-dl-cert" style="background:white;color:var(--navy);border:1px solid var(--border);" onclick="closeCertModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- COURSES PAGE -->
+<div class="page-wrap">
+  <h1>All Courses</h1>
+  <p>Explore our wide range of skill-building courses.</p>
+  <div class="course-grid" id="courses-grid">
+    <p style="color:var(--muted);grid-column:1/-1;text-align:center;padding:40px;">Loading courses…</p>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+  <div>
+    <div id="toast-title" style="font-weight:800;font-size:1.05rem;margin-bottom:2px;color:var(--navy);"></div>
+    <div id="toast-desc" style="font-size:0.9rem;color:var(--muted);font-weight:500;"></div>
+  </div>
+</div>
+
+<footer>
+  Contact us: +63 995 223 1266 &nbsp;|&nbsp; Email: <a href="mailto:skillpace@email.com">skillpace@email.com</a><br><br>
+  &copy; 2026 SkillPace. All rights reserved.
+</footer>
+
+<script type="module">
+import { initializeApp }
+  from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut }
+  from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc }
+  from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyBKeRzaLsLzLajQ6DrO_wyIJTFO31fSZtU",
+  authDomain:        "skillpace-36741.firebaseapp.com",
+  projectId:         "skillpace-36741",
+  storageBucket:     "skillpace-36741.firebasestorage.app",
+  messagingSenderId: "680592513115",
+  appId:             "1:680592513115:web:7a67b2ea17fa0a888dc77e"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+/* ── PDF links ── */
+const PDF_LINKS = {
+  'C#':     "https://drive.google.com/file/d/1D3aUjeZKjvCzoOjx3S8yz-HDTaootvlc/view?usp=share_link",
+  'CSS':    "https://drive.google.com/file/d/1xkH6qF0-d4j2MPZFvnCE_QWmp5ACASuf/view?usp=share_link",
+  'PYTHON': "https://drive.google.com/file/d/1Cg2A5Uji0tfh84biopV0tHzG8SczwcOz/view?usp=share_link",
+  'HTML':   "https://drive.google.com/file/d/1wxYdnic0INDnsKSwgVMjyw5PrH3T9qmd/view",
+  'JAVA':   "https://drive.google.com/file/d/1krj_jZIKrBGsjMq6PK3gjXQi0JwaQNu-/view?usp=share_link",
+  'SQL':    "https://drive.google.com/file/d/1IzVV7L80Ax7tmVCDAQQ0RzGLUpa_J4lU/view?usp=share_link",
+};
+
+/* ══════════════════════════════════════════════════════
+   COURSE DATA  —  ALL ans: VALUES ARE 0-BASED INDICES
+   opts[0]=first option, opts[1]=second, opts[2]=third, opts[3]=fourth
+══════════════════════════════════════════════════════ */
+const COURSES = [
+  {
+    numId:1, id:'C#',
+    title:'C#',
+    description:'Build powerful desktop apps, high-performance web services, and immersive 2D/3D games using the versatile .NET framework.',
+    duration:'12 hours',
+    thumb:'https://uploads.onecompiler.io/44hcec5gg/44hfz95ze/images.png',
+    modules:[
+      { title:'Module 1: ', lessons:[
+        { id:'wd-1', title:'C#', duration:'18 min', videoId:'salY_Sm6mv4',
+          handout:'HTML (HyperText Markup Language) is the backbone of every web page.',
+          points:['DOCTYPE declaration and the html element','Head vs Body sections','Basic tags: h1-h6, p, a, img, div, span','Nesting elements and document hierarchy'] },
+        { id:'wd-2', title:'Variables and Types', duration:'22 min', videoId:'fNcJuPIZ2WE',
+          handout:'Forms allow users to input data, while tables display structured information.',
+          points:['Form elements: input, textarea, select, button','Table structure: thead, tbody, tfoot','Form validation: required, pattern, type','Accessibility with labels and aria attributes'] },
+      ]},
+      { title:'Module 2: ', lessons:[
+        { id:'wd-3', title:'Methods and Functions', duration:'25 min', videoId:'1Rs2ND1ryYc',
+          handout:'CSS controls the visual presentation of HTML elements.',
+          points:['Selectors: class, id, element, pseudo-class','Box model: margin, border, padding, content','Colors, fonts, and units','Specificity rules and the cascade'] },
+        { id:'wd-4', title:'Control Flow', duration:'30 min', videoId:'JJSoEo8JSnc',
+          handout:'Modern CSS layout techniques that make responsive design easier.',
+          points:['Flexbox: flex-direction, justify-content, align-items','CSS Grid: grid-template-columns','Responsive design with media queries','Combining Flexbox and Grid'] },
+      ]},
+    ],
+    quizzes:[
+      { id:'wd-q1', title:'Quiz 1', passPct:0.60, questions:[
+        // opts indices: 0='Class Library', 1='C# Compiler', 2='CLR', 3='Visual Studio'
+        { q:'1. Which component of the .NET Framework handles memory management (garbage collection)?',
+          opts:['Class Library','C# Compiler','CLR (Common Language Runtime)','Visual Studio'], ans:2 },
+        // opts: 0='print("Hello")', 1='Console.WriteLine("Hello")', 2='System.out.println', 3='Write.Console'
+        { q:'2. What is the correct syntax to print "Hello" to the console in C#?',
+          opts:['print("Hello");','Console.WriteLine("Hello");','System.out.println("Hello");','Write.Console("Hello");'], ans:1 },
+        // opts: 0='Start()', 1='static void Main()', 2='Console.WriteLine()', 3='using System()'
+        { q:'3. In a C# program, which method serves as the main entry point called by the CLR?',
+          opts:['Start()','static void Main()','Console.WriteLine()','using System()'], ans:1 },
+        // opts: 0='float f = 1.2', 1='float f = 1.2m', 2='float f = 1.2f', 3='float f = 1.2L'
+        { q:'4. How do you correctly declare a float literal in C#?',
+          opts:['float f = 1.2;','float f = 1.2m;','float f = 1.2f;','float f = 1.2L;'], ans:2 },
+        // opts: 0='var', 1='readonly', 2='static', 3='const'
+        { q:'5. Which keyword is used to declare a value that cannot be changed after it is set?',
+          opts:['var','readonly','static','const'], ans:3 },
+      ]},
+      { id:'wd-q2', title:'Quiz 2', passPct:0.60, questions:[
+        // opts: 0='var', 1='let', 2='def', 3='dim'
+        { q:'Which keyword declares a block-scoped variable?', opts:['var','let','def','dim'], ans:1 },
+        // opts: 0='append()', 1='push()', 2='add()', 3='insert()'
+        { q:'What method adds an element to the end of an array?', opts:['append()','push()','add()','insert()'], ans:1 },
+        // opts: 0='Document Object Model', 1='Data Object Module', 2='Document Oriented Markup', 3='Dynamic Object Method'
+        { q:'What does DOM stand for?', opts:['Document Object Model','Data Object Module','Document Oriented Markup','Dynamic Object Method'], ans:0 },
+        // opts: 0='==', 1='=', 2='===', 3='!=='
+        { q:'Which operator checks both value and type?', opts:['==','=','===','!=='], ans:2 },
+        // opts: 0='document.getClass()', 1='document.querySelector(".")', 2='document.getElementById()', 3='document.selectId()'
+        { q:'How do you select an element by its id?', opts:['document.getClass()','document.querySelector(".")','document.getElementById()','document.selectId()'], ans:2 },
+      ]},
+    ],
+    exam:{ title:'C# Final Exam', passPct:0.75, questions:[
+      { q:'What is the correct HTML element for a line break?', opts:['<break>','<lb>','<br>','<newline>'], ans:2 },
+      { q:'Which CSS unit is relative to the root element font-size?', opts:['em','px','rem','vh'], ans:2 },
+      { q:'Which HTML attribute specifies alternate text for an image?', opts:['title','src','alt','longdesc'], ans:2 },
+      { q:'Which JavaScript method removes the last array element?', opts:['last()','pop()','end()','splice()'], ans:1 },
+      { q:'Which CSS value hides an element but keeps its space?', opts:['display:none','hidden','visibility:hidden','display:invisible'], ans:2 },
+      { q:'How do you write a JavaScript single-line comment?', opts:['<!-- comment -->','// comment','** comment','## comment'], ans:1 },
+      { q:'Which HTML tag links an external CSS file?', opts:['<style>','<css>','<link>','<script>'], ans:2 },
+      { q:'Which CSS property makes text bold?', opts:['text-style','font-weight','font-style','text-weight'], ans:1 },
+    ]},
+    activities:[
+      { id:'wd-a1', title:'Build a Personal Bio Page', desc:'Create a simple HTML page about yourself using headings, paragraphs, a list, and an image.' },
+      { id:'wd-a2', title:'Style a Navigation Bar', desc:'Use CSS Flexbox to build and style a horizontal navigation bar with hover effects.' },
+    ],
+    project:{ title:'Portfolio Website', desc:'Build a complete 3-page personal portfolio website using HTML, CSS, and JavaScript.' },
+  },
+
+  {
+    numId:2, id:'CSS',
+    title:'CSS',
+    description:'Style and layout web pages with precision using modern techniques like Flexbox, Grid, and responsive design.',
+    duration:'18 hours',
+    thumb:'https://uploads.onecompiler.io/44hcec5gg/44hc8bkmc/creative-css3-tutorials.jpg',
+    modules:[
+      { title:'Module 1: ', lessons:[
+        { id:'ds-1', title:'What is CSS?', duration:'30 min', videoId:'QUT1VHiLmmI',
+          handout:'CSS controls how HTML elements are displayed.',
+          points:['Inline, internal, and external CSS','Selectors and declarations','The cascade and inheritance','Browser default styles'] },
+        { id:'ds-2', title:'Selectors and Properties', duration:'35 min', videoId:'vmEHCJofslg',
+          handout:'Selectors target elements; properties define what changes.',
+          points:['Element, class, and ID selectors','Pseudo-classes and pseudo-elements','Attribute selectors','Combinators: descendant, child, sibling'] },
+      ]},
+      { title:'Module 2: ', lessons:[
+        { id:'ds-3', title:'Box Model', duration:'28 min', videoId:'UO98lJQ3QGI',
+          handout:'Every element is a rectangular box.',
+          points:['Content, padding, border, margin','box-sizing: border-box','Collapsing margins','Outline vs border'] },
+      ]},
+      { title:'Module 3: ', lessons:[
+        { id:'ds-4', title:'CSS Flexbox', duration:'40 min', videoId:'pqNCD_5r0IU',
+          handout:'Flexbox is a one-dimensional layout model.',
+          points:['display:flex on the container','justify-content and align-items','flex-wrap and flex-grow','order property'] },
+        { id:'ds-5', title:'CSS Grid', duration:'32 min', videoId:'85dtiMz9tSo',
+          handout:'CSS Grid is two-dimensional layout.',
+          points:['grid-template-columns and rows','gap property','Placing items with grid-column/row','Auto-fill and auto-fit'] },
+      ]},
+    ],
+    quizzes:[
+      { id:'ds-q1', title:'CSS Quiz 1', passPct:0.60, questions:[
+        // opts: 0='<style src>', 1='<link rel="stylesheet" href>', 2='<css link>', 3='<script href>'
+        { q:'1. Which is the correct syntax for an External Stylesheet link in HTML?',
+          opts:['<style src="styles.css">','<link rel="stylesheet" href="styles.css">','<css link="styles.css">','<script href="styles.css">'], ans:1 },
+        // opts: 0='Element selector', 1='Universal selector (*)', 2='Class selector (.)', 3='ID selector (#)'
+        { q:'2. Which CSS selector targets every single element on a web page?',
+          opts:['Element selector','Universal selector (*)','Class selector (.)','ID selector (#)'], ans:1 },
+        // opts: 0='.card {}', 1='card {}', 2='#card {}', 3='*card {}'
+        { q:'3. What is the correct syntax to target an element with the ID "card"?',
+          opts:['.card { }','card { }','#card { }','*card { }'], ans:2 },
+        // opts: 0='Class selector', 1='ID selector', 2='Element selector', 3='Inline style'
+        { q:'4. Which selector has the highest specificity (the most power to override other rules)?',
+          opts:['Class selector','ID selector','Element selector','Inline style'], ans:3 },
+        // opts: 0='#card, h1 {}', 1='#card > h1 {}', 2='#card h1 {}', 3='h1 #card {}'
+        { q:'5. What is the correct syntax for a descendant selector targeting h1 inside #card?',
+          opts:['#card, h1 { }','#card > h1 { }','#card h1 { }','h1 #card { }'], ans:2 },
+      ]},
+    ],
+    exam:{ title:'CSS Final Exam', passPct:0.75, questions:[
+      { q:'What is the purpose of train_test_split?', opts:['To split data for training and evaluation','To split a CSV into multiple files','To separate features from labels','To create a test environment'], ans:0 },
+      { q:'Which metric is best for imbalanced classification?', opts:['Accuracy','Mean Squared Error','F1-Score','R-squared'], ans:2 },
+      { q:'What does a confusion matrix show?', opts:['Feature correlations','Prediction errors by class','Model training time','Data distribution'], ans:1 },
+      { q:'Which Pandas method shows summary statistics?', opts:['df.info()','df.describe()','df.summary()','df.stats()'], ans:1 },
+      { q:'What is overfitting?', opts:['Model performs well on training but poorly on new data','Model is too simple','Model has too few parameters','Model trains too slowly'], ans:0 },
+      { q:'Which plot is best for showing a distribution?', opts:['Line chart','Scatter plot','Histogram','Pie chart'], ans:2 },
+    ]},
+    activities:[
+      { id:'ds-a1', title:'Style a Webpage', desc:'Apply selectors, box model, and flexbox to style a provided HTML page.' },
+    ],
+    project:{ title:'Responsive Landing Page', desc:'Build a fully responsive landing page using CSS Flexbox or Grid.' },
+  },
+
+  {
+    numId:3, id:'PYTHON',
+    title:'PYTHON',
+    description:'Master the worlds most popular language for data science, automation, and web development.',
+    duration:'10 hours',
+    thumb:'https://uploads.onecompiler.io/44hcec5gg/44hdnkzpf/1*3IcLSFuT8PQg4cUBaRXH1A.png',
+    modules:[
+      { title:'Module 1: ', lessons:[
+        { id:'gd-1', title:'Python Introduction', duration:'20 min', videoId:'AvgCkHrcj8w',
+          handout:'Python is high-level, interpreted, and readable.',
+          points:['Indentation defines blocks','Dynamic typing','pip for packages','Great for data science'] },
+        { id:'gd-2', title:'Variables and Strings', duration:'22 min', videoId:'sByzHoiYFX0',
+          handout:'Variables are created by assignment. Strings have many built-in methods.',
+          points:['x = 5 creates an integer','f-strings: f"Hello {name}"','Methods: .upper(), .lower(), .split()','String slicing'] },
+      ]},
+      { title:'Module 2: ', lessons:[
+        { id:'gd-3', title:'Lists and Loops', duration:'18 min', videoId:'g0db5kA4BfQ',
+          handout:'Lists are mutable ordered collections. Loops iterate over sequences.',
+          points:['my_list = [1, 2, 3]','list.append() adds items','for item in list: iterates','while runs while condition is True'] },
+        { id:'gd-4', title:'Functions', duration:'25 min', videoId:'04zGJ8wGG9g',
+          handout:'Functions defined with def are reusable blocks of code.',
+          points:['def my_function(): defines a function','Parameters receive input','return sends value back','Default parameters'] },
+      ]},
+    ],
+    quizzes:[
+      { id:'gd-q1', title:'Python Quiz 1', passPct:0.60, questions:[
+        // opts: 0='IntelliSense', 1='Debugging', 2='Linting (Pylint)', 3='Formatting'
+        { q:'Which feature underlines errors as you type in VS Code without needing to run the code?',
+          opts:['IntelliSense','Debugging','Linting (Pylint)','Formatting'], ans:2 },
+        // opts: 0='Using \\n only', 1='Using triple quotes (""")', 2="Using single quotes (')", 3='Using the str function'
+        { q:'What is the correct syntax for a multi-line string in Python?',
+          opts:['Using \\n only','Using triple quotes (""")','Using single quotes (\')','Using the str function'], ans:1 },
+        // opts: 0='2', 1='4', 2='8', 3='1'
+        { q:"In Python's PEP 8 style guide, how many spaces are recommended for indentation?",
+          opts:['2','4','8','1'], ans:1 },
+        // opts: 0='"Hello, {name}"', 1='f"Hello, {name}"', 2='$"Hello, {name}"', 3='format("Hello, name")'
+        { q:'What is the correct syntax for an f-string to embed a variable name?',
+          opts:['"Hello, {name}"','f"Hello, {name}"','$"Hello, {name}"','format("Hello, name")'], ans:1 },
+        // opts: 0='3.333', 1='3', 2='1', 3='30'
+        { q:'What is the result of the expression 10 // 3 in Python?',
+          opts:['3.333','3','1','30'], ans:1 },
+      ]},
+    ],
+    exam:{ title:'Python Final Exam', passPct:0.75, questions:[
+      { q:'What is the golden ratio approximately equal to?', opts:['1.414','1.618','2.718','3.141'], ans:1 },
+      { q:'Which color model is used for print design?', opts:['RGB','HSL','CMYK','HEX'], ans:2 },
+      { q:'What does "leading" refer to in typography?', opts:['First letter of a paragraph','Space between lines','Letter spacing','Font size'], ans:1 },
+      { q:'What is a mood board?', opts:['A color palette tool','A collection of visual references for a project','A type of grid layout','A branding checklist'], ans:1 },
+      { q:'Which principle groups related elements together?', opts:['Contrast','Repetition','Proximity','Alignment'], ans:2 },
+    ]},
+    activities:[
+      { id:'gd-a1', title:'Number Guessing Game', desc:'Build a Python number guessing game. The program picks a random number 1–100 and gives hints.' },
+      { id:'gd-a2', title:'Student Grade Calculator', desc:'Write a Python program that takes a list of scores and prints the average, highest, and lowest.' },
+    ],
+    project:{ title:'Python Console Application', desc:'Build a complete Python console app of your choice using functions, loops, and file I/O.' },
+  },
+
+  {
+    numId:4, id:'HTML',
+    title:'HTML',
+    description:'Structure the web by mastering the essential building blocks used to create every page.',
+    duration:'14 hours',
+    thumb:'https://uploads.onecompiler.io/44hcec5gg/44hfz95ze/images.jpeg',
+    modules:[
+      { title:'Module 1: ', lessons:[
+        { id:'dm-1', title:'Introduction to HTML', duration:'28 min', videoId:'DvwS7cV9GmQ',
+          handout:'HTML is the standard markup language for web pages.',
+          points:['HTML = HyperText Markup Language','.html file extension','Tags use angle brackets','Opening and closing tag pairs'] },
+        { id:'dm-2', title:'Tags and Elements', duration:'24 min', videoId:'uSaUpYKuBpI',
+          handout:'Elements are the building blocks of HTML pages.',
+          points:['h1–h6 are headings','p is a paragraph','a href creates a link','img src embeds images'] },
+      ]},
+      { title:'Module 2: ', lessons:[
+        { id:'dm-3', title:'HTML Forms', duration:'22 min', videoId:'olqESqEpHNU',
+          handout:'Forms collect user input.',
+          points:['form wraps controls','input type text for text entry','input type submit submits','label links text to inputs'] },
+      ]},
+      { title:'Module 3: ', lessons:[
+        { id:'dm-4', title:'Semantic Elements', duration:'32 min', videoId:'KEEjMQtDtcA',
+          handout:'Semantic tags describe content purpose.',
+          points:['header for introductory content','nav for navigation','main for primary content','footer for page-end info'] },
+        { id:'dm-5', title:'Accessibility Basics', duration:'30 min', videoId:'N3DJmxKHYQ4',
+          handout:'Accessible HTML can be used by everyone.',
+          points:['Always include alt text on images','Use label with form inputs','Headings follow logical order','ARIA attributes add context'] },
+      ]},
+    ],
+    quizzes:[
+      { id:'dm-q1', title:'HTML Quiz 1', passPct:0.60, questions:[
+        // opts: 0='HyperText Markdown Language', 1='HyperText Markup Language', 2='HighText Machine Language', 3='Hyper Tool Multi Language'
+        { q:'1. What does HTML stand for?',
+          opts:['HyperText Markdown Language','HyperText Markup Language','HighText Machine Language','Hyper Tool Multi Language'], ans:1 },
+        // opts: 0='Styling web pages', 1='Creating animations', 2='Structuring web content', 3='Managing databases'
+        { q:'2. What is the main purpose of HTML?',
+          opts:['Styling web pages','Creating animations','Structuring web content','Managing databases'], ans:2 },
+        // opts: 0='A programming language', 1='Text with links to other documents', 2='A styling method', 3='A type of database'
+        { q:'3. What is HyperText?',
+          opts:['A programming language','Text with links to other documents','A styling method','A type of database'], ans:1 },
+        // opts: 0='Visible text on a page', 1='A file format', 2='Code inside angle brackets', 3='A browser feature'
+        { q:'4. What is an HTML tag?',
+          opts:['Visible text on a page','A file format','Code inside angle brackets','A browser feature'], ans:2 },
+        // opts: 0='<p>', 1='<\\p>', 2='</p>', 3='<p/>'
+        { q:'5. Which is a correct closing tag?',
+          opts:['<p>','<\\p>','</p>','<p/>'], ans:2 },
+      ]},
+    ],
+    exam:{ title:'HTML Final Exam', passPct:0.75, questions:[
+      { q:'What is the purpose of a UTM parameter?', opts:['To improve SEO','To track campaign traffic sources','To speed up a website','To create ad copy'], ans:1 },
+      { q:'Which email metric measures the % of recipients who open an email?', opts:['Click rate','Bounce rate','Open rate','Conversion rate'], ans:2 },
+      { q:'What does ROAS stand for?', opts:['Return on Ad Spend','Rate of Ad Success','Reach of Ad System','Revenue on Ad Sales'], ans:0 },
+      { q:'What is a lookalike audience?', opts:['People who look at your ads','An audience similar to your existing customers','A retargeting list','People who visited your website'], ans:1 },
+      { q:'Which metric best measures SEO success over time?', opts:['Social shares','Organic traffic growth','Email open rate','Ad impressions'], ans:1 },
+      { q:'What is A/B testing in advertising?', opts:['Testing two audiences','Running two ad versions to compare performance','Testing on mobile vs desktop','Comparing two platforms'], ans:1 },
+    ]},
+    activities:[
+      { id:'dm-a1', title:'Semantic HTML Page', desc:'Rewrite a non-semantic page using proper semantic tags (header, nav, main, article, footer).' },
+      { id:'dm-a2', title:'HTML Form', desc:'Build a contact form with name, email, message textarea, and a submit button using proper labels.' },
+    ],
+    project:{ title:'Personal Portfolio Website', desc:'Build a multi-section HTML portfolio: About, Skills, Projects, Contact form.' },
+  },
+
+  {
+    numId:5, id:'JAVA',
+    title:'JAVA',
+    description:'Build secure, high-performance enterprise applications and Android apps using a powerful, platform-independent language.',
+    duration:'8 hours',
+    thumb:'https://uploads.onecompiler.io/44hcec5gg/44hc8bkmc/java-logo.png',
+    modules:[
+      { title:'Module 1: ', lessons:[
+        { id:'ps-1', title:'Introduction to Java', duration:'20 min', videoId:'K0t-szLbys4',
+          handout:'Java is class-based and object-oriented. It runs on the JVM.',
+          points:['Write Once, Run Anywhere (WORA)','Compiled to bytecode, run on JVM','Strongly typed language','Large standard library'] },
+        { id:'ps-2', title:'Variables and Data Types', duration:'22 min', videoId:'HAnw168huqA',
+          handout:'Java has primitive types and reference types.',
+          points:['int stores whole numbers','double stores decimals','boolean stores true or false','String is a reference type'] },
+      ]},
+      { title:'Module 2: ', lessons:[
+        { id:'ps-3', title:'Control Flow', duration:'18 min', videoId:'Iwpi1Lm6dFo',
+          handout:'if-else, for/while loops, and switch control how code executes.',
+          points:['if-else evaluates boolean conditions','for loops run a set number of times','while loops run while condition is true','switch for multi-branch logic'] },
+        { id:'ps-4', title:'Classes and Objects', duration:'25 min', videoId:'8IXCK1e8iFw',
+          handout:'A class is a blueprint; objects are instances.',
+          points:['Class defines fields and methods','Object is an instance of a class','Constructor initializes an object','Access modifiers control visibility'] },
+      ]},
+    ],
+    quizzes:[
+      { id:'ps-q1', title:'Java Quiz 1', passPct:0.60, questions:[
+        // opts: 0='Object-Oriented Programming', 1='Object Operation Process', 2='Output-Oriented Program', 3='Open Object Protocol'
+        { q:'1. What does OOP stand for?',
+          opts:['Object-Oriented Programming','Object Operation Process','Output-Oriented Program','Open Object Protocol'], ans:0 },
+        // opts: 0='Encapsulation', 1='Inheritance', 2='Compilation', 3='Polymorphism'
+        { q:'2. Which of the following is NOT an OOP principle?',
+          opts:['Encapsulation','Inheritance','Compilation','Polymorphism'], ans:2 },
+        // opts: 0='A function', 1='A blueprint for objects', 2='A variable', 3='A loop'
+        { q:'3. What is a class in Java?',
+          opts:['A function','A blueprint for objects','A variable','A loop'], ans:1 },
+        // opts: 0='Class MyClass { }', 1='class MyClass { }', 2='define MyClass { }', 3='new class MyClass { }'
+        { q:'4. Which syntax correctly declares a class?',
+          opts:['Class MyClass { }','class MyClass { }','define MyClass { }','new class MyClass { }'], ans:1 },
+        // opts: 0='A method', 1='A data type', 2='An instance of a class', 3='A loop'
+        { q:'5. What is an object?',
+          opts:['A method','A data type','An instance of a class','A loop'], ans:2 },
+      ]},
+    ],
+    exam:{ title:'Java Final Exam', passPct:0.75, questions:[
+      { q:'What is the primary purpose of a pause in public speaking?', opts:['To remember your lines','To emphasize a point and let it sink in','To check your notes','To drink water'], ans:1 },
+      { q:'Which storytelling element creates emotional connection?', opts:['Facts and statistics','Bullet points','Personal vulnerability','Slide animations'], ans:2 },
+      { q:'What does "open body language" include?', opts:['Crossed arms','Hands in pockets','Uncrossed arms and forward lean','Looking at the floor'], ans:2 },
+      { q:'How long does a typical audience take to form a first impression?', opts:['30 seconds','5 minutes','7 seconds','1 minute'], ans:2 },
+      { q:'What is the "call to action" in a speech?', opts:['The opening story','What you want the audience to do after listening','A rhetorical question','The introduction'], ans:1 },
+    ]},
+    activities:[
+      { id:'ps-a1', title:'Basic Java Program', desc:'Write a Java program that asks for a user\'s name and prints a greeting. Submit a GitHub or Replit link.' },
+    ],
+    project:{ title:'Simple Bank System', desc:'Build a console-based Java bank system with Account, SavingsAccount, CheckingAccount classes.' },
+  },
+
+  {
+    numId:6, id:'SQL',
+    title:'SQL',
+    description:'Query and manage complex databases to extract valuable insights and power data-driven applications with ease.',
+    duration:'9 hours',
+    thumb:'https://uploads.onecompiler.io/44hcec5gg/44hdnkzpf/cq5dam.web.1280.1280.png',
+    modules:[
+      { title:'Module 1: ', lessons:[
+        { id:'fl-1', title:'What is SQL?', duration:'22 min', videoId:'sVKQn2I4HDM',
+          handout:'SQL interacts with relational databases.',
+          points:['SQL is declarative','Tables have rows and columns','Primary keys uniquely identify rows','Common DBs: MySQL, PostgreSQL, SQLite'] },
+        { id:'fl-2', title:'Select Queries', duration:'20 min', videoId:'vEFSS7_i5P4',
+          handout:'SELECT retrieves data. WHERE filters, ORDER BY sorts, LIMIT restricts.',
+          points:['SELECT * gets all columns','WHERE filters by condition','ORDER BY col ASC/DESC sorts','LIMIT n restricts rows'] },
+      ]},
+      { title:'Module 2: ', lessons:[
+        { id:'fl-3', title:'Joins Explained', duration:'28 min', videoId:'gFQNPmLKj1k',
+          handout:'JOINs combine tables on a related column.',
+          points:['INNER JOIN: matching rows only','LEFT JOIN: all left + matched right','Join uses ON table1.col = table2.col','Aliases with AS'] },
+        { id:'fl-4', title:'Fundamentals of SQL', duration:'25 min', videoId:'MqN4lHhvKkA',
+          handout:'INSERT, UPDATE, DELETE modify data in tables.',
+          points:['INSERT INTO adds rows','UPDATE changes existing data','DELETE removes rows','WHERE is critical with UPDATE/DELETE'] },
+      ]},
+    ],
+    quizzes:[
+      { id:'fl-q1', title:'SQL Quiz 1', passPct:0.60, questions:[
+        // opts: 0='Structured Question Language', 1='Simple Query Language', 2='Structured Query Language', 3='System Query Logic'
+        { q:'1. What does SQL stand for?',
+          opts:['Structured Question Language','Simple Query Language','Structured Query Language','System Query Logic'], ans:2 },
+        // opts: 0='GET', 1='SELECT', 2='FETCH', 3='SHOW'
+        { q:'2. Which SQL keyword is used to retrieve data from a table?',
+          opts:['GET','SELECT','FETCH','SHOW'], ans:1 },
+        // opts: 0='ORDER BY', 1='WHERE', 2='LIMIT', 3='GROUP'
+        { q:'3. Which clause is used to filter rows?',
+          opts:['ORDER BY','WHERE','LIMIT','GROUP'], ans:1 },
+        // opts: 0='%', 1='#', 2='*', 3='@'
+        { q:'4. Which symbol selects all columns?',
+          opts:['%','#','*','@'], ans:2 },
+        // opts: 0='UNIQUE', 1='DISTINCT', 2='REMOVE', 3='FILTER'
+        { q:'5. Which keyword removes duplicate values?',
+          opts:['UNIQUE','DISTINCT','REMOVE','FILTER'], ans:1 },
+      ]},
+    ],
+    exam:{ title:'SQL Final Exam', passPct:0.75, questions:[
+      { q:'What is compound interest?', opts:['Interest on the original principal only','Interest on both principal and previously earned interest','A fixed monthly fee','A type of bond'], ans:1 },
+      { q:'What is an index fund?', opts:['A fund managed by a single stock picker','A fund that tracks a market index like the S&P 500','A government savings account','A type of insurance'], ans:1 },
+      { q:'What is your net worth?', opts:['Your annual salary','Total assets minus total liabilities','Your savings account balance','Your credit score'], ans:1 },
+      { q:'Which factor most impacts your credit score?', opts:['Income level','Employment status','Payment history','Age'], ans:2 },
+      { q:'What is diversification in investing?', opts:['Putting all money in one stock','Spreading investments to reduce risk','Investing only in bonds','Keeping money in cash'], ans:1 },
+      { q:'At what age should you start saving for retirement?', opts:['As early as possible','At 40','At 50','When you are debt-free'], ans:0 },
+    ]},
+    activities:[
+      { id:'fl-a1', title:'Database Design', desc:'Design a database schema for a library system with at least 3 tables. Write the CREATE TABLE statements.' },
+      { id:'fl-a2', title:'SQL Query Practice', desc:'Write 5 SQL queries on a dataset of your choice: SELECT, WHERE, JOIN, GROUP BY, and ORDER BY.' },
+    ],
+    project:{ title:'E-Commerce Database', desc:'Design and implement a full SQL database for an e-commerce store with products, customers, and orders.' },
+  },
+];
+
+/* ══════════════════════════════════════════════════════
+   FIRESTORE HELPERS
+══════════════════════════════════════════════════════ */
+let currentUser = null;
+let fsProgress  = { lessons:{}, assessments:{} };
+
+async function loadFsProgress() {
+  try {
+    const snap = await getDoc(doc(db, 'progress', currentUser.uid));
+    if (snap.exists()) fsProgress = snap.data();
+    else fsProgress = { lessons:{}, assessments:{} };
+  } catch(e) { console.warn('Firestore load error:', e); }
+}
+
+async function saveFsProgress() {
+  try {
+    await setDoc(doc(db, 'progress', currentUser.uid), fsProgress, { merge: true });
+  } catch(e) { console.warn('Firestore save error:', e); }
+}
+
+function getCourseProgress(numId) {
+  const cid = String(numId);
+  return {
+    lessons:             fsProgress.lessons?.[cid]                          || {},
+    quizScores:          fsProgress.assessments?.[cid]?.quizScores          || {},
+    examScore:           fsProgress.assessments?.[cid]?.examScore           || null,
+    submittedActivities: fsProgress.assessments?.[cid]?.submittedActivities || [],
+    projectSubmitted:    fsProgress.assessments?.[cid]?.projectSubmitted    || false,
+    certEarned:          fsProgress.assessments?.[cid]?.certEarned          || false,
+  };
+}
+
+async function markLessonDone(numId, lessonId) {
+  const cid = String(numId);
+  if (!fsProgress.lessons) fsProgress.lessons = {};
+  if (!fsProgress.lessons[cid]) fsProgress.lessons[cid] = {};
+  fsProgress.lessons[cid][lessonId] = true;
+  await saveFsProgress();
+}
+
+async function saveQuizScore(numId, quizId, scoreObj) {
+  const cid = String(numId);
+  if (!fsProgress.assessments) fsProgress.assessments = {};
+  if (!fsProgress.assessments[cid]) fsProgress.assessments[cid] = {};
+  if (!fsProgress.assessments[cid].quizScores) fsProgress.assessments[cid].quizScores = {};
+  fsProgress.assessments[cid].quizScores[quizId] = scoreObj;
+  await saveFsProgress();
+}
+
+async function saveExamScore(numId, scoreObj) {
+  const cid = String(numId);
+  if (!fsProgress.assessments) fsProgress.assessments = {};
+  if (!fsProgress.assessments[cid]) fsProgress.assessments[cid] = {};
+  fsProgress.assessments[cid].examScore = scoreObj;
+  await saveFsProgress();
+}
+
+async function saveActivity(numId, actId) {
+  const cid = String(numId);
+  if (!fsProgress.assessments) fsProgress.assessments = {};
+  if (!fsProgress.assessments[cid]) fsProgress.assessments[cid] = {};
+  if (!fsProgress.assessments[cid].submittedActivities) fsProgress.assessments[cid].submittedActivities = [];
+  if (!fsProgress.assessments[cid].submittedActivities.includes(actId)) {
+    fsProgress.assessments[cid].submittedActivities.push(actId);
+  }
+  await saveFsProgress();
+}
+
+async function saveProject(numId) {
+  const cid = String(numId);
+  if (!fsProgress.assessments) fsProgress.assessments = {};
+  if (!fsProgress.assessments[cid]) fsProgress.assessments[cid] = {};
+  fsProgress.assessments[cid].projectSubmitted = true;
+  await saveFsProgress();
+}
+
+async function saveCertEarned(numId) {
+  const cid = String(numId);
+  if (!fsProgress.assessments) fsProgress.assessments = {};
+  if (!fsProgress.assessments[cid]) fsProgress.assessments[cid] = {};
+  fsProgress.assessments[cid].certEarned = true;
+  await saveFsProgress();
+}
+
+/* ══════════════════════════════════════════════════════
+   CERTIFICATE ELIGIBILITY
+══════════════════════════════════════════════════════ */
+function getAllLessonsFlat(course) {
+  return course.modules.flatMap(m => m.lessons);
+}
+
+function checkCertEligible(course, prog) {
+  const allLessons = getAllLessonsFlat(course);
+  const lessonsOk  = allLessons.every(l => !!prog.lessons[l.id]);
+  const quizzesOk  = course.quizzes.every(q => {
+    const sc = prog.quizScores[q.id];
+    return sc && sc.passed === true;
+  });
+  const examOk  = !!(prog.examScore && prog.examScore.passed === true);
+  const actsOk  = course.activities.every(a => prog.submittedActivities.includes(a.id));
+  const projOk  = !!prog.projectSubmitted;
+  return { lessonsOk, quizzesOk, examOk, actsOk, projOk,
+           eligible: lessonsOk && quizzesOk && examOk && actsOk && projOk };
+}
+
+/* ── Toast ── */
+let toastTimer;
+function showToast(title, desc, isSuccess = true) {
+  const t = document.getElementById('toast');
+  t.style.borderLeftColor = isSuccess ? 'var(--gold)' : 'var(--red)';
+  document.getElementById('toast-title').textContent = title;
+  document.getElementById('toast-desc').textContent  = desc;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3800);
+}
+
+window.toggleMobileMenu = function() {
+  document.getElementById('mobileSidebar').classList.toggle('open');
+  document.getElementById('mobileOverlay').classList.toggle('show');
+};
+
+window.doLogout = async function() {
+  await signOut(auth);
+  window.location.href = 'login.html';
+};
+
+/* ══════════════════════════════════════════════════════
+   RENDER COURSE GRID
+══════════════════════════════════════════════════════ */
+function renderGrid() {
+  const grid = document.getElementById('courses-grid');
+  grid.innerHTML = '';
+  COURSES.forEach(course => {
+    const prog        = getCourseProgress(course.numId);
+    const allLessons  = getAllLessonsFlat(course);
+    const doneLessons = Object.keys(prog.lessons).length;
+    const pct         = allLessons.length ? Math.round(doneLessons / allLessons.length * 100) : 0;
+    const { eligible } = checkCertEligible(course, prog);
+    const certEarned  = prog.certEarned || eligible;
+    const pdfUrl      = PDF_LINKS[course.id] || '';
+    const hasPdf      = pdfUrl.length > 0;
+
+    const card = document.createElement('div');
+    card.className = 'course-card';
+    card.innerHTML = `
+      <img src="${course.thumb}" alt="${course.title}" onerror="this.style.background='#e5e7eb';this.removeAttribute('src')">
+      <div class="course-card-body">
+        <h3>${course.title}</h3>
+        <p>${course.description}</p>
+        <div class="course-duration">&#128337; ${course.duration}</div>
+        <div class="card-progress-row">
+          <div class="card-prog-track"><div class="card-prog-bar" style="width:${pct}%"></div></div>
+          <span class="card-prog-label">${pct}%</span>
+        </div>
+        ${certEarned ? `<div class="cert-badge">&#127941; Certificate Earned</div>` : ''}
+        <button class="btn-start" onclick="openPlayer('${course.id}')">
+          ${pct > 0 ? '&#9654; Continue Learning' : '&#9654; Start Course'}
+        </button>
+        ${hasPdf
+          ? `<a class="card-pdf-link" href="${pdfUrl}" target="_blank" rel="noopener noreferrer">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Download Course Handout PDF
+            </a>`
+          : `<span class="card-pdf-link disabled">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              PDF Handout Coming Soon
+            </span>`
+        }
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   PLAYER
+══════════════════════════════════════════════════════ */
+let activeCourse    = null;
+let activeLessonIdx = 0;
+
+window.openPlayer = function(courseId) {
+  activeCourse    = COURSES.find(c => c.id === courseId);
+  activeLessonIdx = 0;
+  document.getElementById('pm-course-title').textContent = activeCourse.title;
+
+  const pdfUrl = PDF_LINKS[activeCourse.id] || '';
+  const pdfBtn = document.getElementById('pm-pdf-btn');
+  if (pdfUrl) {
+    pdfBtn.href      = pdfUrl;
+    pdfBtn.className = 'download-btn';
+    pdfBtn.target    = '_blank';
+    pdfBtn.onclick   = null;
+  } else {
+    pdfBtn.href      = '#';
+    pdfBtn.className = 'download-btn no-pdf';
+    pdfBtn.target    = '_self';
+    pdfBtn.onclick   = (e) => { e.preventDefault(); showToast('PDF Coming Soon', 'The handout for this course will be available shortly.'); };
+  }
+
+  switchTab('lessons');
+  renderLessonList();
+  loadLesson(0);
+  updateTopProgress();
+  renderCertReqs();
+  document.getElementById('playerModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closePlayer = function() {
+  document.getElementById('playerModal').classList.remove('open');
+  document.body.style.overflow = '';
+  renderGrid();
+};
+
+const PANELS = ['lessons','quiz','exam','activity','project'];
+window.switchTab = function(name) {
+  PANELS.forEach(p => {
+    document.getElementById('panel-' + p).style.display = p === name ? '' : 'none';
+    const tab = document.getElementById('tab-' + p);
+    if(tab) tab.classList.toggle('active', p === name);
+  });
+  if(name === 'quiz')     renderQuizPanel();
+  if(name === 'exam')     renderExamPanel();
+  if(name === 'activity') renderActivityPanel();
+  if(name === 'project')  renderProjectPanel();
+};
+
+function renderLessonList() {
+  const list = document.getElementById('pm-lesson-list');
+  list.innerHTML = '';
+  const prog = getCourseProgress(activeCourse.numId);
+  let globalIdx = 0;
+  activeCourse.modules.forEach(mod => {
+    const modDiv = document.createElement('div');
+    modDiv.className = 'mod-title';
+    modDiv.textContent = mod.title;
+    list.appendChild(modDiv);
+    mod.lessons.forEach(lesson => {
+      const idx    = globalIdx++;
+      const isDone = !!prog.lessons[lesson.id];
+      const item   = document.createElement('div');
+      item.className = 'lesson-item' + (idx === activeLessonIdx ? ' active' : '');
+      item.id = 'li-' + idx;
+      item.innerHTML = `
+        <div class="li-icon ${isDone ? 'done' : ''}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="${isDone ? '#16A34A' : '#9CA3AF'}" stroke-width="2.5">
+            ${isDone ? '<polyline points="20 6 9 17 4 12"/>' : '<polygon points="5 3 19 12 5 21 5 3"/>'}
+          </svg>
+        </div>
+        <div>
+          <div class="li-name">${lesson.title}</div>
+          <div class="li-duration">${lesson.duration}</div>
+        </div>
+      `;
+      item.onclick = () => loadLesson(idx);
+      list.appendChild(item);
+    });
+  });
+}
+
+function loadLesson(idx) {
+  activeLessonIdx = idx;
+  const lessons = getAllLessonsFlat(activeCourse);
+  const lesson  = lessons[idx];
+  if(!lesson) return;
+
+  lessons.forEach((_,i) => {
+    const el = document.getElementById('li-' + i);
+    if(el) el.classList.toggle('active', i === idx);
+  });
+
+  document.getElementById('pm-lesson-title').textContent  = lesson.title;
+  document.getElementById('pm-lesson-sub').textContent    = lesson.duration + ' · ' + activeCourse.title;
+  document.getElementById('pm-handout-title').textContent = lesson.title + ' – Notes';
+  document.getElementById('pm-handout-text').textContent  = lesson.handout || '';
+
+  const pts = document.getElementById('pm-handout-points');
+  pts.innerHTML = '';
+  (lesson.points || []).forEach(p => {
+    const li = document.createElement('li'); li.textContent = p; pts.appendChild(li);
+  });
+
+  const wrap = document.getElementById('pm-video-wrap');
+  wrap.innerHTML = `
+    <div class="thumb-overlay" id="pm-thumb-overlay" onclick="pmPlayVideo()">
+      <img id="pm-vid-thumb" src="https://img.youtube.com/vi/${lesson.videoId}/hqdefault.jpg" alt="lesson thumbnail" />
+      <div class="play-btn-big">
+        <svg viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </div>
+    </div>`;
+
+  const prog   = getCourseProgress(activeCourse.numId);
+  const isDone = !!prog.lessons[lesson.id];
+  const btn    = document.getElementById('pm-btn-complete');
+  btn.innerHTML = isDone ? '&#10003; Completed' : '&#10003; Mark as Complete';
+  btn.className = 'btn-complete' + (isDone ? ' done' : '');
+  updateTopProgress();
+}
+
+window.pmPlayVideo = function() {
+  const lessons = getAllLessonsFlat(activeCourse);
+  const lesson  = lessons[activeLessonIdx];
+  if(!lesson || !lesson.videoId) return;
+  const wrap = document.getElementById('pm-video-wrap');
+  wrap.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${lesson.videoId}?autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;"></iframe>`;
+};
+
+window.pmMarkComplete = async function() {
+  const lessons = getAllLessonsFlat(activeCourse);
+  const lesson  = lessons[activeLessonIdx];
+  if(!lesson) return;
+  const prog = getCourseProgress(activeCourse.numId);
+  if(!prog.lessons[lesson.id]) {
+    await markLessonDone(activeCourse.numId, lesson.id);
+    showToast('Lesson Complete! 🎉', lesson.title + ' marked as done.');
+  }
+  renderLessonList();
+  loadLesson(activeLessonIdx);
+  renderCertReqs();
+  updateTopProgress();
+  const lessons2 = getAllLessonsFlat(activeCourse);
+  if(activeLessonIdx < lessons2.length - 1) {
+    setTimeout(() => loadLesson(activeLessonIdx + 1), 500);
+  }
+};
+
+function updateTopProgress() {
+  if(!activeCourse) return;
+  const prog  = getCourseProgress(activeCourse.numId);
+  const total = getAllLessonsFlat(activeCourse).length;
+  const done  = Object.keys(prog.lessons).length;
+  const pct   = total ? Math.round(done / total * 100) : 0;
+  document.getElementById('pm-prog-bar').style.width       = pct + '%';
+  document.getElementById('pm-prog-text').textContent       = pct + '% complete';
+  document.getElementById('pm-prog-bar-main').style.width   = pct + '%';
+  document.getElementById('pm-prog-text-main').textContent  = pct + '%';
+}
+
+/* ── Quiz Panel ── */
+function renderQuizPanel() {
+  const panel = document.getElementById('quiz-list-panel');
+  panel.innerHTML = '';
+  document.getElementById('quiz-badge').textContent = activeCourse.quizzes.length;
+  const prog = getCourseProgress(activeCourse.numId);
+
+  activeCourse.quizzes.forEach(quiz => {
+    const sc          = prog.quizScores[quiz.id];
+    const statusClass = !sc ? 'chip-pending' : sc.passed ? 'chip-pass' : 'chip-fail';
+    const statusText  = !sc ? 'Not Started'  : sc.passed ? 'Passed'    : 'Failed';
+    const passCount   = Math.ceil(quiz.questions.length * (quiz.passPct || 0.60));
+    const card = document.createElement('div');
+    card.className = 'assess-card';
+    card.innerHTML = `
+      <div class="assess-card-hdr">
+        <div class="assess-icon quiz">&#128221;</div>
+        <div class="assess-card-info">
+          <h4>${quiz.title}</h4>
+          <p>${quiz.questions.length} questions · Pass score: ${Math.round((quiz.passPct||0.60)*100)}%</p>
+        </div>
+        <div class="assess-meta">
+          ${sc ? `<span class="assess-score">${sc.score}/${sc.total} (${sc.pct}%)</span>` : ''}
+          <span class="assess-chip ${statusClass}">${statusText}</span>
+          <button class="btn-assess ${sc ? 'retry' : 'start'}" onclick="openQuiz('${quiz.id}','quiz')">${sc ? 'Retry' : 'Start Quiz'}</button>
+        </div>
+      </div>
+      <div class="assess-card-body">
+        <p class="assess-body-note">
+          Pass score: ${Math.round((quiz.passPct||0.60)*100)}% (${passCount}/${quiz.questions.length} correct).
+          You can retake unlimited times — only your latest score is saved.
+          ${sc && !sc.passed ? '<br><strong style="color:var(--red)">&#9888; You need a passing score on this quiz to unlock the final exam.</strong>' : ''}
+        </p>
+      </div>
+    `;
+    panel.appendChild(card);
+  });
+}
+
+/* ── Exam Panel ── */
+function renderExamPanel() {
+  const panel = document.getElementById('exam-panel');
+  panel.innerHTML = '';
+  const exam          = activeCourse.exam;
+  const prog          = getCourseProgress(activeCourse.numId);
+  const sc            = prog.examScore;
+  const allQuizPassed = activeCourse.quizzes.every(q => prog.quizScores[q.id]?.passed === true);
+  const locked        = !allQuizPassed;
+  const statusClass   = !sc ? (locked ? 'chip-locked' : 'chip-pending') : sc.passed ? 'chip-pass' : 'chip-fail';
+  const statusText    = !sc ? (locked ? 'Locked'      : 'Not Started')  : sc.passed ? 'Passed'    : 'Failed';
+  const passCount     = Math.ceil(exam.questions.length * (exam.passPct || 0.75));
+
+  const card = document.createElement('div');
+  card.className = 'assess-card';
+  card.innerHTML = `
+    <div class="assess-card-hdr">
+      <div class="assess-icon exam">&#128203;</div>
+      <div class="assess-card-info">
+        <h4>${exam.title}</h4>
+        <p>${exam.questions.length} questions · Pass score: ${Math.round((exam.passPct||0.75)*100)}% (${passCount}/${exam.questions.length} correct)</p>
+      </div>
+      <div class="assess-meta">
+        ${sc ? `<span class="assess-score">${sc.score}/${sc.total} (${sc.pct}%)</span>` : ''}
+        <span class="assess-chip ${statusClass}">${statusText}</span>
+        <button class="btn-assess ${locked ? 'locked' : sc ? 'retry' : 'start'}" ${locked ? 'disabled' : ''} onclick="openQuiz('__exam__','exam')">
+          ${locked ? '&#128274; Locked' : sc ? 'Retry Exam' : 'Take Exam'}
+        </button>
+      </div>
+    </div>
+    <div class="assess-card-body">
+      <p class="assess-body-note">
+        ${locked
+          ? '&#128274; You must pass ALL quizzes first before taking the final exam.'
+          : sc && !sc.passed
+            ? '&#9888; You need at least ' + Math.round((exam.passPct||0.75)*100) + '% to pass. Keep reviewing and try again!'
+            : sc && sc.passed
+              ? '&#10003; Exam passed! This is a core requirement for your certificate.'
+              : 'Score at least ' + Math.round((exam.passPct||0.75)*100) + '% to pass. You can retake if needed.'}
+      </p>
+    </div>
+  `;
+  panel.appendChild(card);
+}
+
+/* ── Activity Panel ── */
+function renderActivityPanel() {
+  const panel = document.getElementById('activity-panel');
+  panel.innerHTML = '';
+  document.getElementById('act-badge').textContent = activeCourse.activities.length;
+  const prog = getCourseProgress(activeCourse.numId);
+
+  activeCourse.activities.forEach(act => {
+    const done = prog.submittedActivities.includes(act.id);
+    const card = document.createElement('div');
+    card.className = 'assess-card';
+    card.innerHTML = `
+      <div class="assess-card-hdr">
+        <div class="assess-icon act">&#128296;</div>
+        <div class="assess-card-info">
+          <h4>${act.title}</h4>
+          <p>${act.desc}</p>
+        </div>
+        <div class="assess-meta">
+          <span class="assess-chip ${done ? 'chip-pass' : 'chip-pending'}">${done ? 'Submitted' : 'Pending'}</span>
+        </div>
+      </div>
+      <div class="assess-card-body">
+        ${done
+          ? '<p class="assess-body-note" style="color:var(--green);">&#10003; Activity submitted successfully. This counts toward your certificate.</p>'
+          : `<div class="submit-area">
+              <div>
+                <label>Your Response / Notes</label>
+                <textarea id="act-text-${act.id}" placeholder="Describe what you did, share your findings, or paste your work here..."></textarea>
+              </div>
+              <div>
+                <label>Link to your work (optional)</label>
+                <input type="url" id="act-url-${act.id}" placeholder="https://your-work-link.com">
+              </div>
+              <p class="submit-note">Your submission will be saved and counts toward your certificate of completion.</p>
+              <button class="btn-assess start" onclick="submitActivity('${act.id}')">Submit Activity</button>
+            </div>`}
+      </div>
+    `;
+    panel.appendChild(card);
+  });
+}
+
+window.submitActivity = async function(actId) {
+  await saveActivity(activeCourse.numId, actId);
+  showToast('Activity Submitted! ✅', 'Great work! Your activity has been recorded.');
+  renderActivityPanel();
+  renderCertReqs();
+};
+
+/* ── Project Panel ── */
+function renderProjectPanel() {
+  const panel = document.getElementById('project-panel');
+  panel.innerHTML = '';
+  const proj = activeCourse.project;
+  const prog = getCourseProgress(activeCourse.numId);
+  const done = prog.projectSubmitted;
+  const card = document.createElement('div');
+  card.className = 'assess-card';
+  card.innerHTML = `
+    <div class="assess-card-hdr">
+      <div class="assess-icon proj">&#128640;</div>
+      <div class="assess-card-info">
+        <h4>${proj.title}</h4>
+        <p>${proj.desc}</p>
+      </div>
+      <div class="assess-meta">
+        <span class="assess-chip ${done ? 'chip-pass' : 'chip-pending'}">${done ? 'Submitted' : 'Pending'}</span>
+      </div>
+    </div>
+    <div class="assess-card-body">
+      ${done
+        ? '<p class="assess-body-note" style="color:var(--green);">&#10003; Project submitted! This counts toward your certificate of completion.</p>'
+        : `<div class="submit-area">
+            <div>
+              <label>Project Description / Summary</label>
+              <textarea id="proj-text" placeholder="Describe your project, your process, and your results..."></textarea>
+            </div>
+            <div>
+              <label>Link to your project (GitHub, Google Drive, etc.)</label>
+              <input type="url" id="proj-url" placeholder="https://your-project-link.com">
+            </div>
+            <p class="submit-note">Submitting your project is required to become eligible for the Certificate of Completion.</p>
+            <button class="btn-assess start" onclick="submitProject()">Submit Project</button>
+          </div>`}
+    </div>
+  `;
+  panel.appendChild(card);
+  document.getElementById('proj-done-icon').style.display = done ? '' : 'none';
+}
+
+window.submitProject = async function() {
+  await saveProject(activeCourse.numId);
+  showToast('Project Submitted! 🚀', 'Excellent! Your project has been recorded.');
+  renderProjectPanel();
+  renderCertReqs();
+};
+
+/* ══════════════════════════════════════════════════════
+   CERTIFICATE REQUIREMENTS DISPLAY
+══════════════════════════════════════════════════════ */
+function renderCertReqs() {
+  if(!activeCourse) return;
+  const prog = getCourseProgress(activeCourse.numId);
+  const { lessonsOk, quizzesOk, examOk, actsOk, projOk, eligible } = checkCertEligible(activeCourse, prog);
+
+  const allLessons  = getAllLessonsFlat(activeCourse);
+  const doneLessons = Object.keys(prog.lessons).length;
+  const passedQuizzes = activeCourse.quizzes.filter(q => prog.quizScores[q.id]?.passed).length;
+  const doneActs      = activeCourse.activities.filter(a => prog.submittedActivities.includes(a.id)).length;
+
+  const reqs = [
+    { label:`Lessons (${doneLessons}/${allLessons.length})`, met: lessonsOk },
+    { label:`Quizzes Passed (${passedQuizzes}/${activeCourse.quizzes.length})`, met: quizzesOk },
+    { label:`Exam ≥ ${Math.round((activeCourse.exam.passPct||0.75)*100)}%`, met: examOk },
+    { label:`Activities (${doneActs}/${activeCourse.activities.length})`, met: actsOk },
+    { label:`Project Submitted`, met: projOk },
+  ];
+
+  document.getElementById('cert-reqs').innerHTML =
+    reqs.map(r => `<span class="cert-req-chip ${r.met ? 'met' : ''}">${r.met ? '✓' : '○'} ${r.label}</span>`).join('');
+
+  const certBtn = document.getElementById('btn-get-cert');
+  certBtn.disabled = !eligible;
+
+  if(eligible && !prog.certEarned) {
+    saveCertEarned(activeCourse.numId).then(() => {
+      renderGrid();
+    });
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   QUIZ / EXAM ENGINE
+══════════════════════════════════════════════════════ */
+let quizState = {};
+
+window.openQuiz = function(quizId, type) {
+  let questions, title, passPct;
+  if(type === 'exam') {
+    questions = activeCourse.exam.questions;
+    title     = activeCourse.exam.title;
+    passPct   = activeCourse.exam.passPct || 0.75;
+  } else {
+    const quiz = activeCourse.quizzes.find(q => q.id === quizId);
+    questions  = quiz.questions;
+    title      = quiz.title;
+    passPct    = quiz.passPct || 0.60;
+  }
+  quizState = { quizId, type, questions, passPct, current:0, answers:[], revealed:false };
+  document.getElementById('qm-title').textContent = title;
+  document.getElementById('quizModal').classList.add('open');
+  renderQuestion();
+};
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderQuestion() {
+  const { questions, current, answers } = quizState;
+  const q   = questions[current];
+  const pct = (current / questions.length) * 100;
+  document.getElementById('qm-subtitle').textContent = `Question ${current+1} of ${questions.length}`;
+  document.getElementById('qm-prog').style.width     = pct + '%';
+  document.getElementById('qm-content').innerHTML    = `
+    <div class="question-num">Question ${current+1} of ${questions.length}</div>
+    <div class="question-text">${escHtml(q.q)}</div>
+    <div class="options-list" id="opts-list">
+      ${q.opts.map((opt,i) => `
+        <button class="option-btn ${answers[current] === i ? 'selected' : ''}" onclick="selectAnswer(${i})">${escHtml(opt)}</button>
+      `).join('')}
+    </div>
+  `;
+  const nav = document.getElementById('qm-nav');
+  const answered = answers.filter(a => a !== undefined).length;
+  nav.innerHTML = `
+    <button class="btn-quiz-nav secondary" onclick="quizNav(-1)" ${current===0?'disabled':''}>&#8592; Back</button>
+    <span style="font-size:0.8rem;color:var(--muted)">${answered}/${questions.length} answered</span>
+    ${current < questions.length-1
+      ? `<button class="btn-quiz-nav primary" onclick="quizNav(1)" ${answers[current]===undefined?'disabled':''}>Next &#8594;</button>`
+      : `<button class="btn-quiz-nav primary" onclick="submitQuiz()" ${answers[current]===undefined?'disabled':''}>Submit &#10003;</button>`
+    }
+  `;
+}
+
+window.selectAnswer = function(i) {
+  quizState.answers[quizState.current] = i;
+  renderQuestion();
+};
+
+window.quizNav = function(dir) {
+  quizState.current = Math.max(0, Math.min(quizState.questions.length-1, quizState.current + dir));
+  renderQuestion();
+};
+
+window.submitQuiz = async function() {
+  const { quizId, type, questions, answers, passPct } = quizState;
+  let correct = 0;
+  questions.forEach((q,i) => { if(answers[i] === q.ans) correct++; });
+  const total = questions.length;
+  const pct   = Math.round(correct / total * 100);
+  const pass  = (correct / total) >= passPct;
+  const score = { score:correct, total, pct, passed:pass, passPct };
+
+  if(type === 'exam') {
+    await saveExamScore(activeCourse.numId, score);
+    document.getElementById('exam-done-icon').style.display = pass ? '' : 'none';
+  } else {
+    await saveQuizScore(activeCourse.numId, quizId, score);
+  }
+  renderCertReqs();
+
+  const passThreshold = Math.round(passPct * 100);
+  document.getElementById('qm-prog').style.width = '100%';
+  document.getElementById('qm-subtitle').textContent = 'Results';
+  document.getElementById('qm-content').innerHTML = `
+    <div class="quiz-result">
+      <div class="result-circle ${pass?'pass':'fail'}">${pct}%</div>
+      <div class="result-title">${pass ? '🎉 Passed!' : '😔 Not Quite'}</div>
+      <div class="result-sub">
+        ${pass
+          ? 'Great job! You passed with ' + pct + '%. This counts toward your certificate.'
+          : 'You scored ' + pct + '%. You need ' + passThreshold + '% to pass. Review and try again!'}
+      </div>
+      <div class="result-stats">
+        <div class="result-stat"><div class="stat-val">${correct}</div><div class="stat-lbl">Correct</div></div>
+        <div class="result-stat"><div class="stat-val">${total-correct}</div><div class="stat-lbl">Wrong</div></div>
+        <div class="result-stat"><div class="stat-val">${pct}%</div><div class="stat-lbl">Score</div></div>
+        <div class="result-stat"><div class="stat-val">${passThreshold}%</div><div class="stat-lbl">Pass Mark</div></div>
+      </div>
+    </div>
+  `;
+  document.getElementById('qm-nav').innerHTML = `
+    <button class="btn-quiz-nav secondary" onclick="closeQuizModal()">Close</button>
+    <button class="btn-quiz-nav primary" onclick="closeQuizModal(); openQuiz('${quizId}','${type}')">Retry</button>
+  `;
+  if(pass) showToast(type==='exam' ? 'Exam Passed! 🏆' : 'Quiz Passed! ✅', `You scored ${correct}/${total} (${pct}%).`);
+  else     showToast(type==='exam' ? 'Exam Not Passed' : 'Quiz Not Passed', `You scored ${pct}%. Need ${passThreshold}% to pass.`, false);
+};
+
+window.closeQuizModal = function() {
+  document.getElementById('quizModal').classList.remove('open');
+  if(quizState.type === 'quiz') renderQuizPanel();
+  if(quizState.type === 'exam') renderExamPanel();
+};
+
+/* ── Certificate Modal ── */
+window.openCertModal = function() {
+  const prog = getCourseProgress(activeCourse.numId);
+  const { eligible } = checkCertEligible(activeCourse, prog);
+  if(!eligible) {
+    showToast('Not Yet Eligible', 'Complete all requirements to earn your certificate.', false);
+    return;
+  }
+  document.getElementById('cert-modal-title').textContent = 'Congratulations, ' + (currentUser.displayName || 'Student') + '!';
+  document.getElementById('cert-modal-body').textContent  =
+    `You have successfully completed "${activeCourse.title}" and earned your Certificate of Completion!`;
+  document.getElementById('certModal').classList.add('open');
+};
+window.closeCertModal = function() {
+  document.getElementById('certModal').classList.remove('open');
+};
+window.downloadCertificate = function() {
+  showToast('Certificate Ready! 🎓', 'Your PDF certificate is being prepared for download.');
+  closeCertModal();
+};
+
+/* ══════════════════════════════════════════════════════
+   AUTH GATE
+══════════════════════════════════════════════════════ */
+onAuthStateChanged(auth, async (user) => {
+  const loadingEl = document.getElementById('auth-loading');
+
+  if (!user) {
+    window.location.href = 'welcome.html';
+    return;
+  }
+
+  currentUser = user;
+
+  const name     = user.displayName || user.email || 'User';
+  const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2) || '?';
+  document.getElementById('user-avatar-initials').textContent = initials;
+  document.getElementById('user-display-name').textContent    = name;
+
+  await loadFsProgress();
+  renderGrid();
+
+  loadingEl.style.opacity = '0';
+  loadingEl.style.transition = 'opacity 0.4s';
+  setTimeout(() => { loadingEl.style.display = 'none'; }, 400);
+});
+</script>
+</body>
+</html>
