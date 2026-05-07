@@ -1,0 +1,1762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillPace – Courses</title>
+  <style>
+    :root {
+      --gold: #FBC156;
+      --navy: #1e293b;
+      --border: #E5E7EB;
+      --muted: #6B7280;
+      --green: #16A34A;
+      --red: #DC2626;
+      --sidebar-collapsed: 90px;
+      --sidebar-expanded: 260px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      background: white; color: black; overflow-x: hidden;
+      padding-left: var(--sidebar-collapsed);
+      transition: padding-left 0.4s ease;
+    }
+
+    .sidebar-desktop {
+      position: fixed; top: 0; left: 0; height: 100vh;
+      width: var(--sidebar-collapsed);
+      background: #fff; border-right: 1px solid var(--border);
+      box-shadow: 2px 0 15px rgba(0,0,0,0.05);
+      z-index: 1000; transition: width 0.4s cubic-bezier(0.16,1,0.3,1);
+      overflow: hidden; display: flex; flex-direction: column;
+    }
+    .sidebar-desktop:hover { width: var(--sidebar-expanded); }
+    .sidebar-container { display: flex; flex-direction: column; height: 100%; padding: 25px 0; }
+    .sidebar-brand {
+      display: flex; align-items: center; height: 60px; margin-bottom: 40px;
+      width: 100%; justify-content: center; cursor: pointer; position: relative;
+      transition: padding 0.3s ease; text-decoration: none;
+    }
+    .sidebar-brand img { width: 55px; height: 55px; object-fit: contain; transition: all 0.3s ease; }
+    .sidebar-brand span {
+      position: absolute; left: 85px; opacity: 0;
+      font-weight: 800; font-size: 1.4rem; color: var(--navy);
+      transition: opacity 0.2s ease; pointer-events: none; white-space: nowrap;
+    }
+    .sidebar-desktop:hover .sidebar-brand { justify-content: flex-start; padding-left: 17px; }
+    .sidebar-desktop:hover .sidebar-brand img { width: 50px; height: 50px; }
+    .sidebar-desktop:hover .sidebar-brand span { opacity: 1; pointer-events: auto; }
+    .nav-list { list-style: none; display: flex; flex-direction: column; gap: 8px; width: 100%; padding: 0 12px; }
+    .nav-link {
+      display: flex; align-items: center; height: 50px; color: var(--navy); opacity: 0.8;
+      text-decoration: none; font-size: 15px; font-weight: 600;
+      width: 100%; justify-content: center; cursor: pointer; border-radius: 12px;
+      transition: all 0.3s ease;
+    }
+    .nav-link svg { min-width: 24px; width: 24px; height: 24px; stroke: var(--navy); transition: all 0.3s ease; }
+    .nav-text { display: none; white-space: nowrap; margin-left: 16px; opacity: 0; transition: opacity 0.2s; }
+    .sidebar-desktop:hover .nav-link { justify-content: flex-start; padding-left: 18px; }
+    .sidebar-desktop:hover .nav-text { display: block; opacity: 1; transition-delay: 0.1s; }
+    .nav-link:hover { background: rgba(0,0,0,0.05); opacity: 1; }
+    .nav-link.active { opacity: 1; background: rgba(251,193,86,0.1); color: #b27b00; }
+    .nav-link.active svg { stroke: #b27b00; }
+    .nav-link.logout-link:hover { background: rgba(220,38,38,0.07); color: #dc2626; opacity:1; }
+    .nav-link.logout-link:hover svg { stroke: #dc2626; }
+    .sidebar-user { margin-top: auto; padding: 0 12px 10px; width: 100%; }
+    .sidebar-user-inner {
+      display: flex; align-items: center; height: 50px;
+      justify-content: center; border-radius: 12px;
+      background: #f1f5f9; overflow: hidden; transition: all 0.3s ease; margin-bottom: 8px;
+    }
+    .sidebar-desktop:hover .sidebar-user-inner { justify-content: flex-start; padding-left: 18px; }
+    .user-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--navy); color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; font-weight: 800; flex-shrink: 0;
+    }
+    .user-name {
+      display: none; white-space: nowrap; margin-left: 12px;
+      font-size: 0.88rem; font-weight: 700; color: var(--navy);
+      opacity: 0; transition: opacity 0.2s; overflow: hidden;
+      text-overflow: ellipsis; max-width: 140px;
+    }
+    .sidebar-desktop:hover .user-name { display: block; opacity: 1; transition-delay: 0.1s; }
+
+    .mobile-header {
+      display: none; padding: 10px 20px;
+      align-items: center; justify-content: space-between;
+      background: #fff; color: var(--navy);
+      position: sticky; top: 0; z-index: 900;
+      border-bottom: 1px solid var(--border);
+    }
+    .mobile-logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.2rem; color: var(--navy); text-decoration: none; }
+    .mobile-logo img { height: 45px; }
+    .hamburger { background: none; border: none; color: var(--navy); cursor: pointer; display: flex; align-items: center; }
+    .mobile-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 1000;
+      opacity: 0; pointer-events: none; transition: 0.3s ease;
+    }
+    .mobile-overlay.show { opacity: 1; pointer-events: auto; }
+    .mobile-sidebar {
+      position: fixed; top: 0; left: -280px; width: 280px; height: 100vh;
+      background: #fff; z-index: 1001; transition: left 0.3s ease;
+      display: flex; flex-direction: column; padding-top: 20px;
+      border-right: 1px solid var(--border);
+    }
+    .mobile-sidebar.open { left: 0; }
+    .mobile-sidebar .nav-list { padding: 0 20px; margin-top: 20px; }
+    .mobile-sidebar .nav-link { justify-content: flex-start; padding-left: 15px; }
+    .mobile-sidebar .nav-text { display: block; opacity: 1; }
+    .close-mobile { position: absolute; top: 20px; right: 20px; background: none; border: none; cursor: pointer; }
+
+    #auth-loading {
+      position: fixed; inset: 0; background: #fff;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 9999; gap: 16px;
+    }
+    #auth-loading img { width: 70px; height: 70px; object-fit: contain; }
+    #auth-loading p { color: var(--muted); font-size: 0.95rem; font-weight: 600; }
+    .spinner {
+      width: 36px; height: 36px; border: 3px solid var(--border);
+      border-top-color: var(--navy); border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .page-wrap { padding: 40px 24px; max-width: 1200px; margin: 0 auto; }
+    .page-wrap h1 { font-weight: 800; color: var(--navy); font-size: 2.2rem; margin-bottom: 8px; }
+    .page-wrap > p { color: var(--muted); font-size: 1.1rem; margin-bottom: 30px; }
+    .course-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; }
+    .course-card {
+      background: white; border: 1px solid var(--border); border-radius: 12px;
+      overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+      display: flex; flex-direction: column; transition: all 0.3s;
+    }
+    .course-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+    .course-card img { width: 100%; height: 180px; object-fit: cover; }
+    .course-card-body { padding: 20px; display: flex; flex-direction: column; flex: 1; gap: 6px; }
+    .course-card-body h3 { font-size: 1.2rem; font-weight: 700; color: var(--navy); }
+    .course-card-body p { font-size: 0.9rem; color: var(--muted); line-height: 1.6; flex-grow: 1; }
+    .course-duration { font-weight: 700; color: var(--navy); font-size: 0.9rem; margin-bottom: 6px; }
+    .card-progress-row { display: flex; align-items: center; gap: 8px; margin: 4px 0 10px; }
+    .card-prog-track { flex: 1; height: 6px; background: var(--border); border-radius: 9999px; overflow: hidden; }
+    .card-prog-bar { height: 100%; background: var(--navy); border-radius: 9999px; transition: width 0.5s; }
+    .card-prog-label { font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+    .btn-start {
+      width: 100%; background: var(--navy); color: white;
+      border: none; padding: 12px; border-radius: 8px;
+      font-weight: 600; cursor: pointer; font-family: inherit; transition: background 0.2s;
+    }
+    .btn-start:hover { background: #0f172a; }
+    .card-pdf-link {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 9px; border: 1px dashed var(--border); border-radius: 8px;
+      font-size: 0.8rem; font-weight: 600; color: var(--navy);
+      text-decoration: none; transition: background 0.2s, border-color 0.2s; cursor: pointer;
+    }
+    .card-pdf-link:hover { background: #f0f4ff; border-color: var(--navy); }
+    .card-pdf-link.disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+    .cert-badge {
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      padding: 8px; border-radius: 8px; font-size: 0.8rem; font-weight: 700;
+      background: #FEF9C3; color: #92400E; border: 1px solid #FDE68A;
+    }
+
+    .modal-bg {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.65); z-index: 2000;
+      align-items: flex-start; justify-content: center;
+      overflow-y: auto; padding: 20px;
+    }
+    .modal-bg.open { display: flex; }
+    .player-modal {
+      background: white; border-radius: 16px;
+      width: 100%; max-width: 1200px; margin: auto;
+      overflow: hidden; box-shadow: 0 24px 80px rgba(0,0,0,0.3);
+      display: flex; flex-direction: column;
+    }
+    .player-topbar {
+      background: var(--navy); padding: 14px 20px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .player-topbar h2 { color: white; font-size: 1rem; font-weight: 700; flex: 1; }
+    .topbar-prog-row { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+    .topbar-prog-label { font-size: 0.75rem; color: rgba(255,255,255,0.7); white-space: nowrap; }
+    .prog-track { flex: 1; height: 7px; background: rgba(255,255,255,0.2); border-radius: 9999px; overflow: hidden; }
+    .prog-bar { height: 100%; background: var(--gold); border-radius: 9999px; transition: width 0.4s; }
+    .modal-close {
+      background: rgba(255,255,255,0.15); border: none; color: white;
+      width: 32px; height: 32px; border-radius: 50%; font-size: 1.1rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .modal-close:hover { background: rgba(255,255,255,0.3); }
+    .player-tabs { display: flex; background: #f8faff; border-bottom: 1px solid var(--border); gap: 0; }
+    .player-tab {
+      padding: 11px 20px; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+      color: var(--muted); border-bottom: 3px solid transparent;
+      transition: all 0.2s; background: none; border-top: none; border-left: none; border-right: none;
+      font-family: inherit;
+    }
+    .player-tab.active { color: var(--navy); border-bottom-color: var(--navy); background: white; }
+    .player-tab:hover:not(.active) { color: var(--navy); background: #f0f4ff; }
+    .player-tab .tab-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 18px; height: 18px; border-radius: 50%; font-size: 0.65rem; font-weight: 700;
+      background: var(--border); color: var(--muted); margin-left: 5px;
+    }
+    .player-tab.active .tab-badge { background: var(--navy); color: white; }
+    .player-tab .tab-done { color: var(--green); margin-left: 4px; font-size: 0.75rem; }
+    .player-body { display: grid; grid-template-columns: 1fr 300px; min-height: 560px; }
+    .player-main { padding: 20px 24px; overflow-y: auto; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 16px; }
+    .lesson-header .lesson-title { font-size: 1.15rem; font-weight: 800; color: var(--navy); }
+    .lesson-header .lesson-sub { font-size: 0.82rem; color: var(--muted); margin-top: 3px; }
+    .video-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
+    .video-label span { color: var(--red); }
+    .video-wrap { width: 100%; aspect-ratio: 16/9; border-radius: 10px; overflow: hidden; background: #000; position: relative; }
+    .thumb-overlay { position: absolute; inset: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; background: #000; }
+    .thumb-overlay img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .play-btn-big { position: absolute; width: 64px; height: 64px; border-radius: 50%; background: rgba(200,0,0,0.92); display: flex; align-items: center; justify-content: center; transition: transform 0.2s, background 0.2s; }
+    .thumb-overlay:hover .play-btn-big { background: rgba(200,0,0,1); transform: scale(1.1); }
+    .play-btn-big svg { width: 26px; height: 26px; margin-left: 4px; }
+    .handout-box { background: #F8FAFF; border: 1px solid var(--border); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .handout-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+    .handout-label span { color: #2563eb; }
+    .handout-title { font-size: 0.92rem; font-weight: 700; color: var(--navy); }
+    .handout-text { font-size: 0.83rem; color: #374151; line-height: 1.75; overflow-y: auto; max-height: 120px; padding-right: 4px; }
+    .handout-points { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .handout-points li { font-size: 0.8rem; color: #374151; display: flex; gap: 7px; align-items: flex-start; line-height: 1.5; }
+    .handout-points li::before { content: '→'; color: var(--gold); font-weight: 900; flex-shrink: 0; margin-top: 1px; }
+    .download-btn { display: inline-flex; align-items: center; gap: 7px; background: var(--navy); color: white; border: none; padding: 9px 16px; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; text-decoration: none; font-family: inherit; transition: background 0.2s; align-self: flex-start; }
+    .download-btn:hover { background: #0f172a; }
+    .download-btn.no-pdf { background: #e5e7eb; color: var(--muted); cursor: not-allowed; pointer-events: none; }
+    .player-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-complete { background: var(--gold); color: #111; border: none; padding: 9px 18px; border-radius: 8px; font-size: 0.84rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: background 0.2s; }
+    .btn-complete:hover { background: #e8a83c; }
+    .btn-complete.done { background: #DCFCE7; color: var(--green); border: 1px solid #86EFAC; }
+    .prog-row { display: flex; align-items: center; gap: 8px; }
+    .prog-label { font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+    .prog-track-light { flex: 1; height: 7px; background: var(--border); border-radius: 9999px; overflow: hidden; }
+    .prog-bar-navy { height: 100%; background: var(--navy); border-radius: 9999px; transition: width 0.4s; }
+    .player-sidebar { overflow-y: auto; }
+    .sidebar-hdr { padding: 12px 16px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); background: #F3F4F6; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 2; }
+    .mod-title { padding: 8px 14px 5px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); background: #FAFAFA; border-bottom: 1px solid var(--border); }
+    .lesson-item { display: flex; align-items: flex-start; gap: 10px; padding: 11px 14px; cursor: pointer; border-bottom: 1px solid var(--border); border-left: 3px solid transparent; transition: background 0.15s; }
+    .lesson-item:hover { background: #F0F4FF; }
+    .lesson-item.active { background: #EEF2FF; border-left-color: var(--navy); }
+    .lesson-item.active .li-name { font-weight: 700; color: var(--navy); }
+    .li-icon { width: 22px; height: 22px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+    .li-icon.done { background: #DCFCE7; }
+    .li-icon svg { width: 12px; height: 12px; }
+    .li-name { font-size: 0.82rem; line-height: 1.35; }
+    .li-duration { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+
+    .assess-panel { padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+    .assess-card { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: box-shadow 0.2s; }
+    .assess-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.07); }
+    .assess-card-hdr { padding: 14px 18px; display: flex; align-items: center; gap: 12px; background: #F8FAFF; border-bottom: 1px solid var(--border); }
+    .assess-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+    .assess-icon.quiz { background: #EDE9FE; }
+    .assess-icon.exam { background: #FEF3C7; }
+    .assess-icon.act  { background: #DCFCE7; }
+    .assess-icon.proj { background: #DBEAFE; }
+    .assess-card-info { flex: 1; }
+    .assess-card-info h4 { font-size: 0.95rem; font-weight: 700; color: var(--navy); }
+    .assess-card-info p  { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+    .assess-meta { display: flex; gap: 10px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
+    .assess-chip { font-size: 0.72rem; font-weight: 700; padding: 4px 10px; border-radius: 9999px; white-space: nowrap; }
+    .chip-pending { background: #F3F4F6; color: var(--muted); }
+    .chip-pass    { background: #DCFCE7; color: var(--green); }
+    .chip-fail    { background: #FEE2E2; color: var(--red); }
+    .chip-locked  { background: #F3F4F6; color: #9CA3AF; }
+    .assess-score { font-size: 0.85rem; font-weight: 700; color: var(--navy); }
+    .btn-assess { padding: 8px 18px; border-radius: 8px; font-size: 0.82rem; font-weight: 700; cursor: pointer; border: none; font-family: inherit; transition: all 0.2s; }
+    .btn-assess.start  { background: var(--navy); color: white; }
+    .btn-assess.start:hover { background: #0f172a; }
+    .btn-assess.retry  { background: white; color: var(--navy); border: 1px solid var(--border); }
+    .btn-assess.retry:hover { background: #f3f4f6; }
+    .btn-assess.locked { background: #f3f4f6; color: #9ca3af; cursor: not-allowed; }
+    .assess-card-body { padding: 14px 18px; background: white; }
+    .assess-body-note { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+    .submit-area { display: flex; flex-direction: column; gap: 14px; }
+    .submit-area label { font-size: 0.82rem; font-weight: 700; color: var(--navy); display: block; margin-bottom: 5px; }
+    .submit-area textarea { width: 100%; padding: 12px; border: 1.5px solid var(--border); border-radius: 9px; font-size: 0.88rem; font-family: inherit; resize: vertical; min-height: 100px; transition: border-color 0.2s; color: var(--navy); }
+    .submit-area textarea:focus { border-color: var(--navy); }
+    .submit-area input[type="url"] { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 9px; font-size: 0.88rem; font-family: inherit; transition: border-color 0.2s; color: var(--navy); }
+    .submit-area input[type="url"]:focus { border-color: var(--navy); }
+    .submit-note { font-size: 0.78rem; color: var(--muted); line-height: 1.6; }
+
+    .cert-section { margin: 0 24px 24px; padding: 20px; border-radius: 12px; background: linear-gradient(135deg, #FEF9C3 0%, #FEF3C7 100%); border: 1.5px solid #FDE68A; display: flex; align-items: center; gap: 16px; }
+    .cert-icon { font-size: 2.5rem; flex-shrink: 0; }
+    .cert-info h4 { font-size: 1rem; font-weight: 800; color: #92400E; margin-bottom: 4px; }
+    .cert-info p { font-size: 0.82rem; color: #78350F; line-height: 1.5; }
+    .cert-info .cert-requirements { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .cert-req-chip { font-size: 0.72rem; font-weight: 700; padding: 3px 9px; border-radius: 9999px; background: white; border: 1px solid #FDE68A; color: #92400E; }
+    .cert-req-chip.met { background: #DCFCE7; border-color: #86EFAC; color: var(--green); }
+    .btn-cert { margin-left: auto; flex-shrink: 0; padding: 10px 20px; background: #92400E; color: white; border: none; border-radius: 9px; font-size: 0.84rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: background 0.2s; }
+    .btn-cert:hover:not(:disabled) { background: #78350F; }
+    .btn-cert:disabled { background: #D97706; opacity: 0.5; cursor: not-allowed; }
+
+    .quiz-modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 3000; align-items: center; justify-content: center; padding: 20px; }
+    .quiz-modal-bg.open { display: flex; }
+    .quiz-modal { background: white; border-radius: 16px; width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto; box-shadow: 0 30px 100px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
+    .quiz-hdr { padding: 18px 24px; background: var(--navy); color: white; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .quiz-hdr h3 { font-size: 1rem; font-weight: 800; }
+    .quiz-hdr span { font-size: 0.82rem; opacity: 0.7; }
+    .quiz-body { padding: 24px; flex: 1; overflow-y: auto; }
+    .quiz-progress-bar { height: 5px; background: var(--border); border-radius: 9999px; overflow: hidden; margin-bottom: 20px; }
+    .quiz-progress-fill { height: 100%; background: var(--gold); border-radius: 9999px; transition: width 0.3s; }
+    .question-num { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 6px; }
+    .question-text { font-size: 1rem; font-weight: 700; color: var(--navy); margin-bottom: 18px; line-height: 1.5; }
+    .options-list { display: flex; flex-direction: column; gap: 10px; }
+    .option-btn { padding: 13px 16px; border: 2px solid var(--border); border-radius: 10px; font-size: 0.88rem; font-weight: 500; cursor: pointer; text-align: left; background: white; font-family: inherit; transition: all 0.15s; color: var(--navy); }
+    .option-btn:hover:not(.selected):not(.correct):not(.wrong) { border-color: var(--navy); background: #f0f4ff; }
+    .option-btn.selected { border-color: var(--navy); background: #EEF2FF; font-weight: 700; }
+    .option-btn.correct  { border-color: var(--green); background: #DCFCE7; color: var(--green); font-weight: 700; }
+    .option-btn.wrong    { border-color: var(--red); background: #FEE2E2; color: var(--red); }
+    .option-btn:disabled { cursor: default; }
+    .quiz-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; gap: 10px; }
+    .btn-quiz-nav { padding: 10px 22px; border-radius: 9px; font-size: 0.85rem; font-weight: 700; cursor: pointer; border: none; font-family: inherit; transition: all 0.2s; }
+    .btn-quiz-nav.primary { background: var(--navy); color: white; }
+    .btn-quiz-nav.primary:hover { background: #0f172a; }
+    .btn-quiz-nav.secondary { background: white; color: var(--navy); border: 1px solid var(--border); }
+    .btn-quiz-nav.secondary:hover { background: #f3f4f6; }
+    .btn-quiz-nav:disabled { opacity: 0.4; cursor: not-allowed; }
+    .quiz-result { text-align: center; padding: 20px 0; }
+    .result-circle { width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 900; }
+    .result-circle.pass { background: #DCFCE7; color: var(--green); border: 4px solid #86EFAC; }
+    .result-circle.fail { background: #FEE2E2; color: var(--red); border: 4px solid #FCA5A5; }
+    .result-title { font-size: 1.3rem; font-weight: 800; color: var(--navy); margin-bottom: 6px; }
+    .result-sub { font-size: 0.9rem; color: var(--muted); margin-bottom: 20px; }
+    .result-stats { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px; }
+    .result-stat { background: #F8FAFF; border: 1px solid var(--border); border-radius: 10px; padding: 12px 20px; text-align: center; }
+    .result-stat .stat-val { font-size: 1.4rem; font-weight: 900; color: var(--navy); }
+    .result-stat .stat-lbl { font-size: 0.72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+
+    .cert-modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 4000; align-items: center; justify-content: center; padding: 20px; }
+    .cert-modal-bg.open { display: flex; }
+    .cert-modal { background: white; border-radius: 16px; width: 100%; max-width: 600px; padding: 40px; text-align: center; box-shadow: 0 30px 100px rgba(0,0,0,0.3); }
+    .cert-modal .cert-trophy { font-size: 4rem; margin-bottom: 12px; }
+    .cert-modal h2 { font-size: 1.6rem; font-weight: 900; color: var(--navy); margin-bottom: 8px; }
+    .cert-modal p { font-size: 0.9rem; color: var(--muted); line-height: 1.7; margin-bottom: 24px; }
+    .cert-modal-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .btn-dl-cert { padding: 12px 28px; background: var(--navy); color: white; border: none; border-radius: 9px; font-size: 0.9rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: background 0.2s; }
+    .btn-dl-cert:hover { background: #0f172a; }
+    .btn-dl-cert.gold { background: #92400E; }
+    .btn-dl-cert.gold:hover { background: #78350F; }
+
+    #toast { position: fixed; bottom: 30px; right: 30px; z-index: 9999; background: white; border: 1px solid var(--border); border-left: 4px solid var(--gold); border-radius: 10px; padding: 18px 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); opacity: 0; transform: translateY(20px); pointer-events: none; transition: all 0.3s ease; display: flex; align-items: center; gap: 15px; }
+    #toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+    footer { text-align: center; padding: 50px; color: var(--muted); font-size: 0.9rem; border-top: 1px solid var(--border); margin-top: 60px; background: #f9fafb; }
+
+    @media (max-width: 1024px) { .course-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 900px) { body { padding-left: 0; } .sidebar-desktop { display: none; } .mobile-header { display: flex; } .player-body { grid-template-columns: 1fr; } .player-sidebar { border-top: 1px solid var(--border); max-height: 240px; } }
+    @media (max-width: 650px) { .course-grid { grid-template-columns: 1fr; max-width: 420px; } }
+  </style>
+</head>
+<body>
+
+<div id="auth-loading">
+  <img src="https://uploads.onecompiler.io/44hg23thx/44hg24bdt/zxc.png" alt="SkillPace Logo" onerror="this.style.display='none'">
+  <div class="spinner"></div>
+  <p>Loading SkillPace…</p>
+</div>
+
+<div class="mobile-header">
+  <a class="mobile-logo" href="home.html">
+    <img src="https://uploads.onecompiler.io/44hg23thx/44hg24bdt/zxc.png" alt="SkillPace Logo" />
+    SkillPace
+  </a>
+  <button class="hamburger" onclick="toggleMobileMenu()">
+    <svg viewBox="0 0 24 24" width="30" height="30" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+</div>
+<div class="mobile-overlay" id="mobileOverlay" onclick="toggleMobileMenu()"></div>
+<div class="mobile-sidebar" id="mobileSidebar">
+  <button class="close-mobile" onclick="toggleMobileMenu()">
+    <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+  <div style="display:flex;align-items:center;gap:12px;padding:0 20px;height:70px;">
+    <img src="https://uploads.onecompiler.io/44hg23thx/44hg24bdt/zxc.png" style="width:50px;height:50px;" alt="Logo">
+    <span style="font-weight:800;font-size:1.3rem;color:var(--navy);">SkillPace</span>
+  </div>
+  <ul class="nav-list">
+    <li><a href="home.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-text">Home</span></a></li>
+    <li><a href="courses.html" class="nav-link active"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span class="nav-text">Courses</span></a></li>
+    <li><a href="tutoring.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="nav-text">Tutoring</span></a></li>
+    <li><a href="connect.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-text">Connect</span></a></li>
+    <li><a href="dashboard.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg><span class="nav-text">Dashboard</span></a></li>
+    <li style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">
+      <a class="nav-link logout-link" onclick="doLogout()" style="cursor:pointer;">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span class="nav-text">Log Out</span>
+      </a>
+    </li>
+  </ul>
+</div>
+
+<aside class="sidebar-desktop">
+  <div class="sidebar-container">
+    <a class="sidebar-brand" href="home.html">
+      <img src="https://uploads.onecompiler.io/44hg23thx/44hg24bdt/zxc.png" alt="Logo">
+      <span>SkillPace</span>
+    </a>
+    <ul class="nav-list">
+      <li><a href="home.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nav-text">Home</span></a></li>
+      <li><a href="courses.html" class="nav-link active"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span class="nav-text">Courses</span></a></li>
+      <li><a href="tutoring.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="nav-text">Tutoring</span></a></li>
+      <li><a href="connect.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-text">Connect</span></a></li>
+      <li><a href="dashboard.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg><span class="nav-text">Dashboard</span></a></li>
+    </ul>
+    <div class="sidebar-user">
+      <div class="sidebar-user-inner">
+        <div class="user-avatar" id="user-avatar-initials">?</div>
+        <div class="user-name" id="user-display-name">User</div>
+      </div>
+      <a class="nav-link logout-link" onclick="doLogout()" style="cursor:pointer;">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span class="nav-text">Log Out</span>
+      </a>
+    </div>
+  </div>
+</aside>
+
+<div class="modal-bg" id="playerModal">
+  <div class="player-modal">
+    <div class="player-topbar">
+      <h2 id="pm-course-title">Course Title</h2>
+      <div class="topbar-prog-row">
+        <span class="topbar-prog-label" id="pm-prog-text">0% complete</span>
+        <div class="prog-track" style="width:110px;"><div class="prog-bar" id="pm-prog-bar" style="width:0%"></div></div>
+      </div>
+      <button class="modal-close" onclick="closePlayer()">&#x2715;</button>
+    </div>
+    <div class="player-tabs">
+      <button class="player-tab active" id="tab-lessons" onclick="switchTab('lessons')">&#128214; Lessons</button>
+      <button class="player-tab" id="tab-quiz" onclick="switchTab('quiz')">&#128221; Quizzes <span class="tab-badge" id="quiz-badge">0</span></button>
+      <button class="player-tab" id="tab-exam" onclick="switchTab('exam')">&#128203; Exam <span id="exam-done-icon" class="tab-done" style="display:none">&#10003;</span></button>
+      <button class="player-tab" id="tab-activity" onclick="switchTab('activity')">&#128296; Activities <span class="tab-badge" id="act-badge">0</span></button>
+      <button class="player-tab" id="tab-project" onclick="switchTab('project')">&#128640; Project <span id="proj-done-icon" class="tab-done" style="display:none">&#10003;</span></button>
+    </div>
+    <div id="panel-lessons">
+      <div class="player-body">
+        <div class="player-main" id="pm-main-col">
+          <div class="lesson-header">
+            <div class="lesson-title" id="pm-lesson-title">Lesson Title</div>
+            <div class="lesson-sub"   id="pm-lesson-sub">Duration · Course</div>
+          </div>
+          <div>
+            <div class="video-label"><span>&#9654;</span> Video Lesson</div>
+            <div class="video-wrap" id="pm-video-wrap">
+              <div class="thumb-overlay" id="pm-thumb-overlay" onclick="pmPlayVideo()">
+                <img id="pm-vid-thumb" src="" alt="lesson thumbnail" />
+                <div class="play-btn-big">
+                  <svg viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="handout-label"><span>&#128196;</span> Lesson Handout</div>
+            <div class="handout-box">
+              <div class="handout-title" id="pm-handout-title">Lesson Notes</div>
+              <div class="handout-text" id="pm-handout-text">Select a lesson to read its handout.</div>
+              <ul class="handout-points" id="pm-handout-points"></ul>
+              <a id="pm-pdf-btn" href="#" class="download-btn no-pdf" target="_blank">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download Course Handout PDF
+              </a>
+            </div>
+          </div>
+          <div class="player-actions">
+            <button class="btn-complete" id="pm-btn-complete" onclick="pmMarkComplete()">&#10003; Mark as Complete</button>
+          </div>
+          <div class="prog-row">
+            <span class="prog-label">Lesson Progress</span>
+            <div class="prog-track-light"><div class="prog-bar-navy" id="pm-prog-bar-main" style="width:0%"></div></div>
+            <span class="prog-label" id="pm-prog-text-main">0%</span>
+          </div>
+        </div>
+        <div class="player-sidebar">
+          <div class="sidebar-hdr">Course Lessons</div>
+          <div id="pm-lesson-list"></div>
+        </div>
+      </div>
+    </div>
+    <div id="panel-quiz"     style="display:none;"><div class="assess-panel" id="quiz-list-panel"></div></div>
+    <div id="panel-exam"     style="display:none;"><div class="assess-panel" id="exam-panel"></div></div>
+    <div id="panel-activity" style="display:none;"><div class="assess-panel" id="activity-panel"></div></div>
+    <div id="panel-project"  style="display:none;"><div class="assess-panel" id="project-panel"></div></div>
+    <div class="cert-section" id="cert-section">
+      <div class="cert-icon">&#127891;</div>
+      <div class="cert-info">
+        <h4>Certificate of Completion</h4>
+        <p>Complete all lessons, pass all quizzes &amp; the final exam (&#8805;75%), and submit all activities &amp; project.</p>
+        <div class="cert-requirements" id="cert-reqs"></div>
+      </div>
+      <button class="btn-cert" id="btn-get-cert" disabled onclick="openCertModal()">Get Certificate</button>
+    </div>
+  </div>
+</div>
+
+<div class="quiz-modal-bg" id="quizModal">
+  <div class="quiz-modal">
+    <div class="quiz-hdr">
+      <h3 id="qm-title">Quiz</h3>
+      <span id="qm-subtitle">Question 1 of 30</span>
+    </div>
+    <div class="quiz-body">
+      <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="qm-prog" style="width:0%"></div></div>
+      <div id="qm-content"></div>
+      <div class="quiz-nav" id="qm-nav"></div>
+    </div>
+  </div>
+</div>
+
+<div class="cert-modal-bg" id="certModal">
+  <div class="cert-modal">
+    <div class="cert-trophy">&#127942;</div>
+    <h2 id="cert-modal-title">Congratulations!</h2>
+    <p id="cert-modal-body">You've successfully completed the course!</p>
+    <div class="cert-modal-actions">
+      <button class="btn-dl-cert gold" onclick="downloadCertificate()">&#11015; Download Certificate</button>
+      <button class="btn-dl-cert" style="background:white;color:var(--navy);border:1px solid var(--border);" onclick="closeCertModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="page-wrap">
+  <h1>All Courses</h1>
+  <p>Explore our wide range of skill-building courses.</p>
+  <div class="course-grid" id="courses-grid">
+    <p style="color:var(--muted);grid-column:1/-1;text-align:center;padding:40px;">Loading courses…</p>
+  </div>
+</div>
+
+<div id="toast">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+  <div>
+    <div id="toast-title" style="font-weight:800;font-size:1.05rem;margin-bottom:2px;color:var(--navy);"></div>
+    <div id="toast-desc" style="font-size:0.9rem;color:var(--muted);font-weight:500;"></div>
+  </div>
+</div>
+
+<footer>
+  Contact us: +63 995 223 1266 &nbsp;|&nbsp; Email: AtSkillPace@gmail.com<br><br>
+  &copy; 2026 SkillPace. All rights reserved.
+</footer>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBKeRzaLsLzLajQ6DrO_wyIJTFO31fSZtU",
+  authDomain: "skillpace-36741.firebaseapp.com",
+  projectId: "skillpace-36741",
+  storageBucket: "skillpace-36741.firebasestorage.app",
+  messagingSenderId: "680592513115",
+  appId: "1:680592513115:web:7a67b2ea17fa0a888dc77e"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+const PDF_LINKS = {
+  'C#':     "https://drive.google.com/file/d/1D3aUjeZKjvCzoOjx3S8yz-HDTaootvlc/view?usp=share_link",
+  'CSS':    "https://drive.google.com/file/d/1xkH6qF0-d4j2MPZFvnCE_QWmp5ACASuf/view?usp=share_link",
+  'PYTHON': "https://drive.google.com/file/d/1Cg2A5Uji0tfh84biopV0tHzG8SczwcOz/view?usp=share_link",
+  'HTML':   "https://drive.google.com/file/d/1wxYdnic0INDnsKSwgVMjyw5PrH3T9qmd/view",
+  'JAVA':   "https://drive.google.com/file/d/1krj_jZIKrBGsjMq6PK3gjXQi0JwaQNu-/view?usp=share_link",
+  'SQL':    "https://drive.google.com/file/d/1IzVV7L80Ax7tmVCDAQQ0RzGLUpa_J4lU/view?usp=share_link",
+};
+
+const COURSES = [
+  // ════════════════════════════════════════════════════
+  // C#
+  // ════════════════════════════════════════════════════
+  {
+    numId:1, id:'C#',
+    title:'C#',
+    description:'Build powerful desktop apps, high-performance web services, and immersive 2D/3D games using the versatile .NET framework.',
+    duration:'12 hours',
+    thumb:'https://uploads.onecompiler.io/44hcec5gg/44hc8bkmc/c-uses.png',
+    modules:[
+      { title:'Module 1: Fundamentals', lessons:[
+        { id:'cs-1', title:'Introduction to C# and .NET', duration:'18 min', videoId:'6LvkfBS10YM',
+          handout:'C# is a modern, object-oriented language built on the .NET framework.',
+          points:['CLR manages memory and execution','C# is strongly typed','Visual Studio is the main IDE','Every program starts at static void Main()'] },
+        { id:'cs-2', title:'Variables and Data Types', duration:'22 min', videoId:'YzfMqUa-Nx0',
+          handout:'C# has value types (int, float, bool) and reference types (string, object).',
+          points:['int, double, float, decimal for numbers','bool for true/false','string for text','var for implicit typing'] },
+      ]},
+      { title:'Module 2: Control & Methods', lessons:[
+        { id:'cs-3', title:'Methods and Functions', duration:'25 min', videoId:'1Rs2ND1ryYc',
+          handout:'Methods are reusable blocks of code defined inside a class.',
+          points:['Access modifiers: public, private, protected','Return types and void','Parameters and arguments','Method overloading'] },
+        { id:'cs-4', title:'Control Flow', duration:'30 min', videoId:'JJSoEo8JSnc',
+          handout:'Control flow directs the order in which statements execute.',
+          points:['if / else if / else','switch statements','for, while, do-while loops','break and continue'] },
+      ]},
+    ],
+    quizzes:[
+      { id:'cs-q1', title:'C# Quiz 1', passPct:0.60, questions:[
+        { q:'Which component of the .NET Framework handles memory management?', opts:['Class Library','C# Compiler','CLR (Common Language Runtime)','Visual Studio'], ans:2 },
+        { q:'What is the correct syntax to print "Hello" to the console in C#?', opts:['print("Hello");','Console.WriteLine("Hello");','System.out.println("Hello");','Write.Console("Hello");'], ans:1 },
+        { q:'In a C# program, which method serves as the main entry point?', opts:['Start()','static void Main()','Console.WriteLine()','using System()'], ans:1 },
+        { q:'How do you correctly declare a float literal in C#?', opts:['float f = 1.2;','float f = 1.2m;','float f = 1.2f;','float f = 1.2L;'], ans:2 },
+        { q:'Which keyword declares a constant value that cannot be changed?', opts:['var','readonly','static','const'], ans:3 },
+      ]},
+      { id:'cs-q2', title:'C# Quiz 2', passPct:0.60, questions:[
+        { q:'Which keyword is used to define a class in C#?', opts:['define','object','class','struct'], ans:2 },
+        { q:'What does "OOP" stand for?', opts:['Object-Oriented Programming','Open-Output Process','Ordered Object Protocol','Optional Object Programming'], ans:0 },
+        { q:'Which access modifier makes a member accessible only within the same class?', opts:['public','protected','private','internal'], ans:2 },
+        { q:'What is the base class of all classes in C#?', opts:['Object','Base','Root','System'], ans:0 },
+        { q:'Which loop guarantees at least one execution?', opts:['for','while','foreach','do-while'], ans:3 },
+      ]},
+    ],
+    exam:{ title:'C# Final Exam', passPct:0.75, questions:[
+      // --- Q1–10: Multiple Choice ---
+      { q:'Q1. What does CLR stand for in .NET?', opts:['Common Language Runtime','Compiled Logic Runtime','Core Language Resource','Class Level Runtime'], ans:0 },
+      { q:'Q2. Which of the following is a value type in C#?', opts:['string','object','int','class'], ans:2 },
+      { q:'Q3. What keyword is used to inherit from a base class in C#?', opts:['extends','inherits',':','implements'], ans:2 },
+      { q:'Q4. Which C# keyword prevents a class from being inherited?', opts:['static','abstract','sealed','readonly'], ans:2 },
+      { q:'Q5. What does the "new" keyword do in C#?', opts:['Declares a variable','Creates an instance of a class','Defines a method','Imports a namespace'], ans:1 },
+      { q:'Q6. Which collection type in C# allows key-value pairs?', opts:['List','Array','Dictionary','Queue'], ans:2 },
+      { q:'Q7. What is the default value of an uninitialized int in C#?', opts:['null','1','-1','0'], ans:3 },
+      { q:'Q8. Which keyword is used for exception handling in C#?', opts:['handle','catch','error','rescue'], ans:1 },
+      { q:'Q9. What does the "override" keyword do in C#?', opts:['Creates a new method','Replaces a virtual base method','Hides a method','Deletes a method'], ans:1 },
+      { q:'Q10. Which namespace must be imported to use Console in C#?', opts:['System.IO','System.Console','System','System.Text'], ans:2 },
+      // --- Q11–20: Situational ---
+      { q:'Q11. You are building a banking app. A user\'s balance must never be accessible directly from outside the class. Which approach is correct?', opts:['Make balance public','Make balance private and use a public property','Use a static variable','Use a constant'], ans:1 },
+      { q:'Q12. Your C# app crashes with "NullReferenceException". What most likely caused this?', opts:['Integer overflow','Accessing a member on a null object','Missing semicolon','Wrong namespace'], ans:1 },
+      { q:'Q13. You need to store 1000 student names in order. Which data structure is most appropriate?', opts:['Dictionary','Queue','List&lt;string&gt;','HashSet'], ans:2 },
+      { q:'Q14. A method should behave differently based on the type of object passed. Which OOP concept helps here?', opts:['Encapsulation','Abstraction','Polymorphism','Inheritance'], ans:2 },
+      { q:'Q15. You want to ensure a class cannot be instantiated directly but can be inherited. Which keyword do you use?', opts:['sealed','static','abstract','private'], ans:2 },
+      { q:'Q16. Your team wants to share common behavior across multiple classes without code duplication. What is the best approach?', opts:['Copy-paste the code','Create a base class and use inheritance','Use multiple Main methods','Create a static class'], ans:1 },
+      { q:'Q17. A file-reading operation might fail. What is the correct way to handle this in C#?', opts:['Ignore the error','Use if-else only','Wrap in a try-catch block','Use a static method'], ans:2 },
+      { q:'Q18. You want to loop through all items in a List&lt;int&gt; without using an index. Which loop is most appropriate?', opts:['while','for','do-while','foreach'], ans:3 },
+      { q:'Q19. You are designing a Shape class with an Area() method that every subclass (Circle, Square) must implement differently. Which design is correct?', opts:['Make Area() static','Make Area() abstract in Shape','Make Area() private','Use a constant for Area'], ans:1 },
+      { q:'Q20. Your app needs to map student IDs (int) to student names (string). Which collection do you use?', opts:['List&lt;string&gt;','string[]','Dictionary&lt;int, string&gt;','Queue&lt;string&gt;'], ans:2 },
+      // --- Q21–30: Syntax ---
+      { q:'Q21. What is the output of: Console.WriteLine(10 % 3);', opts:['3','1','0','2'], ans:1 },
+      { q:'Q22. Which line correctly declares and initializes a string array with 3 elements?', opts:['string arr = new string[3];','string[] arr = new string[3];','array&lt;string&gt; arr = new array[3];','String arr[] = new String(3);'], ans:1 },
+      { q:'Q23. What does this code print? int x = 5; Console.WriteLine(x++);', opts:['6','5','4','Error'], ans:1 },
+      { q:'Q24. Which syntax correctly defines a method that returns an integer?', opts:['void int Add(int a, int b)','int Add(int a, int b) { return a + b; }','Add(int a, int b) -&gt; int','return int Add(a, b)'], ans:1 },
+      { q:'Q25. What is wrong with: string name = null; Console.WriteLine(name.Length);', opts:['Nothing is wrong','name is not declared','This throws a NullReferenceException','Length is not valid for strings'], ans:2 },
+      { q:'Q26. Which syntax correctly creates a new instance of a class called "Car"?', opts:['Car myCar = Car();','var myCar = new Car();','new Car myCar;','Car.new() myCar;'], ans:1 },
+      { q:'Q27. What does "static" mean in: static void Main(string[] args)?', opts:['The method can only be called once','The method belongs to the class, not an instance','The method is private','The method runs asynchronously'], ans:1 },
+      { q:'Q28. Which of these correctly uses a ternary operator in C#?', opts:['int x = if(a &gt; b) a else b;','int x = a &gt; b ? a : b;','int x = a &gt; b then a else b;','int x = (a &gt; b) -&gt; a : b;'], ans:1 },
+      { q:'Q29. What is the correct syntax for a foreach loop over a list called "items"?', opts:['for each(var item in items)','foreach(var item in items)','foreach item in items','for(item : items)'], ans:1 },
+      { q:'Q30. Which line correctly catches only a DivideByZeroException?', opts:['catch(Exception e) {}','catch(DivideByZeroException e) {}','catch DivideByZeroException {}','handle(DivideByZeroException) {}'], ans:1 },
+    ]},
+    activities:[
+      { id:'cs-a1', title:'Build a Console Calculator', desc:'Create a C# console app that performs addition, subtraction, multiplication, and division with error handling.' },
+      { id:'cs-a2', title:'OOP Student Record System', desc:'Build a Student class with Name, Age, and Grade properties. Create at least 5 student objects and display them.' },
+    ],
+    project:{ title:'C# Banking System', desc:'Build a console-based C# bank system with Account, SavingsAccount, and CheckingAccount classes using OOP principles.' },
+  },
+
+  // ════════════════════════════════════════════════════
+  // CSS
+  // ════════════════════════════════════════════════════
+  {
+    numId:2, id:'CSS',
+    title:'CSS',
+    description:'Style and layout web pages with precision using modern techniques like Flexbox, Grid, and responsive design.',
+    duration:'18 hours',
+    thumb:'https://uploads.onecompiler.io/44hcec5gg/44hc8bkmc/creative-css3-tutorials.jpg',
+    modules:[
+      { title:'Module 1: CSS Basics', lessons:[
+        { id:'css-1', title:'What is CSS?', duration:'30 min', videoId:'QUT1VHiLmmI',
+          handout:'CSS controls how HTML elements are displayed.',
+          points:['Inline, internal, and external CSS','Selectors and declarations','The cascade and inheritance','Browser default styles'] },
+        { id:'css-2', title:'Selectors and Properties', duration:'35 min', videoId:'vmEHCJofslg',
+          handout:'Selectors target elements; properties define what changes.',
+          points:['Element, class, and ID selectors','Pseudo-classes and pseudo-elements','Attribute selectors','Combinators: descendant, child, sibling'] },
+      ]},
+      { title:'Module 2: Layout', lessons:[
+        { id:'css-3', title:'Box Model', duration:'28 min', videoId:'UO98lJQ3QGI',
+          handout:'Every element is a rectangular box.',
+          points:['Content, padding, border, margin','box-sizing: border-box','Collapsing margins','Outline vs border'] },
+        { id:'css-4', title:'CSS Flexbox', duration:'40 min', videoId:'pqNCD_5r0IU',
+          handout:'Flexbox is a one-dimensional layout model.',
+          points:['display:flex on the container','justify-content and align-items','flex-wrap and flex-grow','order property'] },
+        { id:'css-5', title:'CSS Grid', duration:'32 min', videoId:'85dtiMz9tSo',
+          handout:'CSS Grid is two-dimensional layout.',
+          points:['grid-template-columns and rows','gap property','Placing items with grid-column/row','Auto-fill and auto-fit'] },
+      ]},
+    ],
+    quizzes:[
+      { id:'css-q1', title:'CSS Quiz 1', passPct:0.60, questions:[
+        { q:'Which is the correct syntax for an External Stylesheet link in HTML?', opts:['&lt;style src="styles.css"&gt;','&lt;link rel="stylesheet" href="styles.css"&gt;','&lt;css link="styles.css"&gt;','&lt;script href="styles.css"&gt;'], ans:1 },
+        { q:'Which CSS selector targets every single element on a web page?', opts:['Element selector','Universal selector (*)','Class selector (.)','ID selector (#)'], ans:1 },
+        { q:'What is the correct syntax to target an element with the ID "card"?', opts:['.card { }','card { }','#card { }','*card { }'], ans:2 },
+        { q:'Which selector has the highest specificity?', opts:['Class selector','ID selector','Element selector','Inline style'], ans:3 },
+        { q:'What is the correct syntax for a descendant selector targeting h1 inside #card?', opts:['#card, h1 { }','#card &gt; h1 { }','#card h1 { }','h1 #card { }'], ans:2 },
+      ]},
+    ],
+    exam:{ title:'CSS Final Exam', passPct:0.75, questions:[
+      // --- Q1–10: Multiple Choice ---
+      { q:'Q1. What does CSS stand for?', opts:['Creative Style Sheets','Cascading Style Sheets','Colorful Style Syntax','Computer Style Sheets'], ans:1 },
+      { q:'Q2. Which CSS property changes the text color of an element?', opts:['font-color','text-color','color','foreground'], ans:2 },
+      { q:'Q3. Which value of "display" makes an element a block-level flex container?', opts:['block','inline','flex','grid'], ans:2 },
+      { q:'Q4. What does the CSS "z-index" property control?', opts:['Element size','Stacking order','Transparency','Animation speed'], ans:1 },
+      { q:'Q5. Which CSS unit is relative to the viewport width?', opts:['em','px','vw','rem'], ans:2 },
+      { q:'Q6. What property is used to make text bold in CSS?', opts:['text-style','font-weight','font-style','text-weight'], ans:1 },
+      { q:'Q7. Which CSS property adds space inside an element, between the content and the border?', opts:['margin','spacing','padding','border-gap'], ans:2 },
+      { q:'Q8. What does "box-sizing: border-box" do?', opts:['Removes the border','Includes padding and border in the element\'s total width/height','Adds a box shadow','Sets the border to none'], ans:1 },
+      { q:'Q9. Which property in Flexbox aligns items along the cross axis?', opts:['justify-content','align-content','align-items','flex-align'], ans:2 },
+      { q:'Q10. Which CSS pseudo-class targets an element when the mouse hovers over it?', opts:[':focus',':active',':hover',':visited'], ans:2 },
+      // --- Q11–20: Situational ---
+      { q:'Q11. A navigation bar\'s items are not lining up horizontally. You are using display:flex on the parent. Which property do you add to keep them on one line?', opts:['flex-direction: column','flex-wrap: nowrap','flex-wrap: wrap','align-items: stretch'], ans:1 },
+      { q:'Q12. A heading overlaps a paragraph below it. What is the most likely cause?', opts:['Wrong font size','Negative margin on the heading or paragraph','Missing border','Wrong color'], ans:1 },
+      { q:'Q13. A client wants a 3-column layout that automatically adjusts on mobile to 1 column. Which approach is best?', opts:['Use position:absolute','Use CSS Grid with media queries','Use float on all elements','Use inline-block only'], ans:1 },
+      { q:'Q14. An image is not centered inside its div. The div has display:flex. What do you add?', opts:['text-align: center','margin: 0 auto only','justify-content: center and align-items: center','float: center'], ans:2 },
+      { q:'Q15. A button should change background color when hovered. Which CSS rule achieves this?', opts:['button.click {}','button:hover { background-color: blue; }','button:focus { background-color: blue; }','button[hover] { background: blue; }'], ans:1 },
+      { q:'Q16. You want a sidebar to always stay visible while scrolling. Which CSS property do you use?', opts:['position: relative','position: absolute','position: fixed','position: sticky'], ans:2 },
+      { q:'Q17. Your text is overflowing outside its container. Which CSS property hides the overflow?', opts:['overflow: visible','overflow: hidden','overflow: scroll','display: none'], ans:1 },
+      { q:'Q18. A developer wants equal spacing between grid columns. Which property achieves this?', opts:['margin','padding','gap','spacing'], ans:2 },
+      { q:'Q19. The page looks fine on desktop but elements stack oddly on mobile. What should you use?', opts:['JavaScript resize event','CSS media queries','Larger font sizes','Fixed widths in px'], ans:1 },
+      { q:'Q20. You need the last child of a list to have a different style without adding a class. Which selector works?', opts:['li.last','li:last-child','li[last]','li::last'], ans:1 },
+      // --- Q21–30: Syntax ---
+      { q:'Q21. Which CSS rule correctly sets the font size to 16 pixels?', opts:['font-size: 16;','font: 16px;','font-size: 16px;','size: 16px;'], ans:2 },
+      { q:'Q22. What is wrong with this CSS? .box { background-color = "red"; }', opts:['Nothing','background-color should be background','= should be : and no quotes needed','red should be #red'], ans:2 },
+      { q:'Q23. Which correctly adds a 2px solid black border?', opts:['border: solid black 2;','border: 2px black;','border: 2px solid black;','border-style: 2px solid black;'], ans:2 },
+      { q:'Q24. What does this rule do? * { margin: 0; padding: 0; }', opts:['Styles only divs','Resets margin and padding for all elements','Hides all elements','Sets font to 0'], ans:1 },
+      { q:'Q25. Which syntax correctly centers a block element horizontally using margin?', opts:['margin: center;','margin: 0 center;','margin: 0 auto;','margin: auto 0;'], ans:2 },
+      { q:'Q26. How do you write a CSS comment?', opts:['// This is a comment','&lt;!-- This is a comment --&gt;','/* This is a comment */','## This is a comment'], ans:2 },
+      { q:'Q27. Which selector correctly styles all paragraph elements inside a div with class "content"?', opts:['.content p {}','content &gt; p {}','div p.content {}','#content &gt; p {}'], ans:0 },
+      { q:'Q28. What does "opacity: 0.5" do to an element?', opts:['Hides it completely','Makes it 50% transparent','Removes its background','Makes text bold'], ans:1 },
+      { q:'Q29. Which rule makes a div 100% of its parent\'s width?', opts:['width: full;','width: 100vw;','width: 100%;','size: 100%;'], ans:2 },
+      { q:'Q30. What is the correct shorthand to set padding: top 10px, right 20px, bottom 10px, left 20px?', opts:['padding: 10px 20px 10px 20px;','padding: 10px 20px;','padding: 20px 10px;','padding: 10 20 10 20;'], ans:1 },
+    ]},
+    activities:[
+      { id:'css-a1', title:'Style a Webpage', desc:'Apply selectors, box model, and flexbox to style a provided HTML page with at least 5 distinct CSS rules.' },
+    ],
+    project:{ title:'Responsive Landing Page', desc:'Build a fully responsive landing page using CSS Flexbox and Grid with at least 3 breakpoints.' },
+  },
+
+  // ════════════════════════════════════════════════════
+  // PYTHON
+  // ════════════════════════════════════════════════════
+  {
+    numId:3, id:'PYTHON',
+    title:'PYTHON',
+    description:'Master the world\'s most popular language for data science, automation, and web development.',
+    duration:'10 hours',
+    thumb:'https://uploads.onecompiler.io/44hcec5gg/44hdnkzpf/1*3IcLSFuT8PQg4cUBaRXH1A.png',
+    modules:[
+      { title:'Module 1: Basics', lessons:[
+        { id:'py-1', title:'Python Introduction', duration:'20 min', videoId:'AvgCkHrcj8w',
+          handout:'Python is high-level, interpreted, and readable.',
+          points:['Indentation defines blocks','Dynamic typing','pip for packages','Great for data science'] },
+        { id:'py-2', title:'Variables and Strings', duration:'22 min', videoId:'sByzHoiYFX0',
+          handout:'Variables are created by assignment. Strings have many built-in methods.',
+          points:['x = 5 creates an integer','f-strings: f"Hello {name}"','Methods: .upper(), .lower(), .split()','String slicing'] },
+      ]},
+      { title:'Module 2: Core Concepts', lessons:[
+        { id:'py-3', title:'Lists and Loops', duration:'18 min', videoId:'g0db5kA4BfQ',
+          handout:'Lists are mutable ordered collections. Loops iterate over sequences.',
+          points:['my_list = [1, 2, 3]','list.append() adds items','for item in list: iterates','while runs while condition is True'] },
+        { id:'py-4', title:'Functions', duration:'25 min', videoId:'04zGJ8wGG9g',
+          handout:'Functions defined with def are reusable blocks of code.',
+          points:['def my_function(): defines a function','Parameters receive input','return sends value back','Default parameters'] },
+      ]},
+    ],
+    quizzes:[
+      { id:'py-q1', title:'Python Quiz 1', passPct:0.60, questions:[
+        { q:'Which feature underlines errors in VS Code without running the code?', opts:['IntelliSense','Debugging','Linting (Pylint)','Formatting'], ans:2 },
+        { q:'What is the correct syntax for a multi-line string in Python?', opts:['Using \\n only','Using triple quotes (""")','Using single quotes','Using the str function'], ans:1 },
+        { q:"In Python's PEP 8 style guide, how many spaces are recommended for indentation?", opts:['2','4','8','1'], ans:1 },
+        { q:'What is the correct syntax for an f-string to embed a variable name?', opts:['"Hello, {name}"','f"Hello, {name}"','$"Hello, {name}"','format("Hello, name")'], ans:1 },
+        { q:'What is the result of the expression 10 // 3 in Python?', opts:['3.333','3','1','30'], ans:1 },
+      ]},
+    ],
+    exam:{ title:'Python Final Exam', passPct:0.75, questions:[
+      // --- Q1–10: Multiple Choice ---
+      { q:'Q1. Which of the following is the correct way to declare a variable in Python?', opts:['var x = 5','int x = 5','x = 5','declare x = 5'], ans:2 },
+      { q:'Q2. What data type does the expression type("hello") return?', opts:['int','string','str','text'], ans:2 },
+      { q:'Q3. Which Python method adds an item to the end of a list?', opts:['add()','insert()','append()','push()'], ans:2 },
+      { q:'Q4. What is the result of bool(0) in Python?', opts:['True','False','None','0'], ans:1 },
+      { q:'Q5. Which keyword is used to define a function in Python?', opts:['function','define','func','def'], ans:3 },
+      { q:'Q6. What does the "len()" function do?', opts:['Returns the last element','Returns the number of items in an object','Deletes elements','Sorts a list'], ans:1 },
+      { q:'Q7. Which of these is a Python dictionary?', opts:['[1, 2, 3]','(1, 2, 3)','{"key": "value"}','{1, 2, 3}'], ans:2 },
+      { q:'Q8. What is the correct way to import the math module?', opts:['include math','using math','import math','require math'], ans:2 },
+      { q:'Q9. Which operator is used for exponentiation in Python?', opts:['^','**','^^','exp()'], ans:1 },
+      { q:'Q10. What does "None" represent in Python?', opts:['The number 0','An empty string','The absence of a value','A boolean False'], ans:2 },
+      // --- Q11–20: Situational ---
+      { q:'Q11. You are writing a function that should return the larger of two numbers. A user passes "5" (string) instead of 5 (int). What happens when you compare with &gt;?', opts:['Python converts it automatically','It raises a TypeError','It returns None','Python ignores the string'], ans:1 },
+      { q:'Q12. Your script keeps throwing "IndentationError". What is the most likely cause?', opts:['Wrong variable name','Mixing tabs and spaces','Missing colon','Wrong import'], ans:1 },
+      { q:'Q13. You need to store a collection of unique student IDs. Which data structure is most appropriate?', opts:['list','tuple','set','dict'], ans:2 },
+      { q:'Q14. A function is running but returning None unexpectedly. What is likely the issue?', opts:['Missing import','The function has no return statement','Wrong indentation','Wrong variable type'], ans:1 },
+      { q:'Q15. You want to read a file line by line without loading it all into memory. What is the best approach?', opts:['f.read().split()','f.readlines()','Use a for loop: for line in f','Load into a list first'], ans:2 },
+      { q:'Q16. A loop runs forever and your program freezes. What is the most likely mistake?', opts:['Wrong variable name','The while condition never becomes False','Missing import','Wrong indentation'], ans:1 },
+      { q:'Q17. You need to map student names to their grades. Which data structure should you use?', opts:['list','tuple','set','dictionary'], ans:3 },
+      { q:'Q18. Your code: numbers = [1,2,3]; numbers[5] raises an error. Which error is it?', opts:['KeyError','ValueError','IndexError','TypeError'], ans:2 },
+      { q:'Q19. You want a function to accept any number of positional arguments. Which parameter syntax is correct?', opts:['def f(args)','def f(**args)','def f(*args)','def f([args])'], ans:2 },
+      { q:'Q20. You want to repeat a block of code exactly 10 times. Which is the most appropriate loop?', opts:['while True','while count &lt; 10','for i in range(10)','for i in list'], ans:2 },
+      // --- Q21–30: Syntax ---
+      { q:'Q21. What is the output of: print(2 ** 3)?', opts:['6','8','9','5'], ans:1 },
+      { q:'Q22. Which line correctly creates an empty dictionary in Python?', opts:['dict = []','dict = {}','dict = ()','dict = set()'], ans:1 },
+      { q:'Q23. What does this print? x = [1,2,3]; print(x[-1])', opts:['1','2','3','Error'], ans:2 },
+      { q:'Q24. Which syntax correctly defines a function with a default parameter?', opts:['def greet(name="World"):','def greet(name=World):','def greet(name: World):','def greet(default name):'], ans:0 },
+      { q:'Q25. What is wrong with: if x = 5: print(x)?', opts:['Nothing','= should be ==','print needs parentheses on some versions','Missing colon'], ans:1 },
+      { q:'Q26. What does this code produce? print("ha" * 3)', opts:['ha ha ha','hahaha','Error','ha3'], ans:1 },
+      { q:'Q27. Which line correctly opens a file for writing in Python?', opts:['open("file.txt")','open("file.txt", "r")','open("file.txt", "w")','file.open("file.txt", write)'], ans:2 },
+      { q:'Q28. What is the output of: len("Python")?', opts:['5','6','7','Error'], ans:1 },
+      { q:'Q29. Which syntax correctly uses a list comprehension to get even numbers from 0–9?', opts:['[x for x in range(10) if x % 2]','[x for x in range(10) if x % 2 == 0]','[x if x % 2 == 0 for x in range(10)]','(x for x in range(10) if x % 2 == 0)'], ans:1 },
+      { q:'Q30. What is the correct syntax for a lambda function that adds two numbers?', opts:['lambda a, b: a + b','lambda(a, b) = a + b','func a, b: a + b','def lambda(a,b): return a+b'], ans:0 },
+    ]},
+    activities:[
+      { id:'py-a1', title:'Number Guessing Game', desc:'Build a Python number guessing game. The program picks a random number 1–100 and gives hints.' },
+      { id:'py-a2', title:'Student Grade Calculator', desc:'Write a Python program that takes a list of scores and prints the average, highest, and lowest.' },
+    ],
+    project:{ title:'Python Console Application', desc:'Build a complete Python console app of your choice using functions, loops, and file I/O.' },
+  },
+
+  // ════════════════════════════════════════════════════
+  // HTML
+  // ════════════════════════════════════════════════════
+  {
+    numId:4, id:'HTML',
+    title:'HTML',
+    description:'Structure the web by mastering the essential building blocks used to create every page.',
+    duration:'14 hours',
+    thumb:'https://uploads.onecompiler.io/44hcec5gg/44hfz95ze/images.jpeg',
+    modules:[
+      { title:'Module 1: Foundations', lessons:[
+        { id:'html-1', title:'Introduction to HTML', duration:'28 min', videoId:'DvwS7cV9GmQ',
+          handout:'HTML is the standard markup language for web pages.',
+          points:['HTML = HyperText Markup Language','.html file extension','Tags use angle brackets','Opening and closing tag pairs'] },
+        { id:'html-2', title:'Tags and Elements', duration:'24 min', videoId:'uSaUpYKuBpI',
+          handout:'Elements are the building blocks of HTML pages.',
+          points:['h1–h6 are headings','p is a paragraph','a href creates a link','img src embeds images'] },
+      ]},
+      { title:'Module 2: Structure', lessons:[
+        { id:'html-3', title:'HTML Forms', duration:'22 min', videoId:'olqESqEpHNU',
+          handout:'Forms collect user input.',
+          points:['form wraps controls','input type text for text entry','input type submit submits','label links text to inputs'] },
+        { id:'html-4', title:'Semantic Elements', duration:'32 min', videoId:'KEEjMQtDtcA',
+          handout:'Semantic tags describe content purpose.',
+          points:['header for introductory content','nav for navigation','main for primary content','footer for page-end info'] },
+        { id:'html-5', title:'Accessibility Basics', duration:'30 min', videoId:'N3DJmxKHYQ4',
+          handout:'Accessible HTML can be used by everyone.',
+          points:['Always include alt text on images','Use label with form inputs','Headings follow logical order','ARIA attributes add context'] },
+      ]},
+    ],
+    quizzes:[
+      { id:'html-q1', title:'HTML Quiz 1', passPct:0.60, questions:[
+        { q:'What does HTML stand for?', opts:['HyperText Markdown Language','HyperText Markup Language','HighText Machine Language','Hyper Tool Multi Language'], ans:1 },
+        { q:'What is the main purpose of HTML?', opts:['Styling web pages','Creating animations','Structuring web content','Managing databases'], ans:2 },
+        { q:'What is HyperText?', opts:['A programming language','Text with links to other documents','A styling method','A type of database'], ans:1 },
+        { q:'What is an HTML tag?', opts:['Visible text on a page','A file format','Code inside angle brackets','A browser feature'], ans:2 },
+        { q:'Which is a correct closing tag?', opts:['&lt;p&gt;','&lt;\\p&gt;','&lt;/p&gt;','&lt;p/&gt;'], ans:2 },
+      ]},
+    ],
+    exam:{ title:'HTML Final Exam', passPct:0.75, questions:[
+      // --- Q1–10: Multiple Choice ---
+      { q:'Q1. What does HTML stand for?', opts:['HyperText Markup Language','HighText Machine Language','HyperText Markdown Language','HyperText Multiple Language'], ans:0 },
+      { q:'Q2. Which HTML tag is used to create a hyperlink?', opts:['&lt;link&gt;','&lt;href&gt;','&lt;a&gt;','&lt;url&gt;'], ans:2 },
+      { q:'Q3. Which tag defines the largest heading?', opts:['&lt;h6&gt;','&lt;heading&gt;','&lt;h1&gt;','&lt;head&gt;'], ans:2 },
+      { q:'Q4. What is the correct HTML element for inserting a line break?', opts:['&lt;break&gt;','&lt;lb&gt;','&lt;br&gt;','&lt;newline&gt;'], ans:2 },
+      { q:'Q5. Which HTML attribute specifies an alternate text for an image?', opts:['title','src','alt','longdesc'], ans:2 },
+      { q:'Q6. Which HTML element is used for an unordered list?', opts:['&lt;ol&gt;','&lt;list&gt;','&lt;ul&gt;','&lt;li&gt;'], ans:2 },
+      { q:'Q7. What does the "DOCTYPE" declaration do?', opts:['Styles the page','Defines the document type to the browser','Creates a new tab','Links JavaScript'], ans:1 },
+      { q:'Q8. Which element is used to embed an image on a page?', opts:['&lt;image&gt;','&lt;img&gt;','&lt;src&gt;','&lt;photo&gt;'], ans:1 },
+      { q:'Q9. Which HTML tag creates a table row?', opts:['&lt;td&gt;','&lt;th&gt;','&lt;tr&gt;','&lt;table-row&gt;'], ans:2 },
+      { q:'Q10. Which semantic element represents the main navigation links?', opts:['&lt;section&gt;','&lt;aside&gt;','&lt;nav&gt;','&lt;menu&gt;'], ans:2 },
+      // --- Q11–20: Situational ---
+      { q:'Q11. A screen reader reads your image as "image001.jpg" to a visually impaired user. What did you forget?', opts:['The src attribute','The alt attribute','The title attribute','The id attribute'], ans:1 },
+      { q:'Q12. Your webpage has no visible structure for search engines. You only used div tags. What should you add?', opts:['More div tags','CSS classes','Semantic HTML elements like header, main, footer','JavaScript'], ans:2 },
+      { q:'Q13. A form\'s submit button does nothing when clicked. What is likely missing?', opts:['An id on the button','The action attribute on the form tag','A div wrapper','A CSS style'], ans:1 },
+      { q:'Q14. Users complain that clicking a label does not focus the related input. What is missing?', opts:['A class on the label','The "for" attribute on the label matching the input\'s id','An onclick handler','A placeholder attribute'], ans:1 },
+      { q:'Q15. Your page title does not appear in the browser tab. Which element is missing or wrong?', opts:['&lt;h1&gt; in the body','&lt;title&gt; in the &lt;head&gt;','&lt;header&gt; tag','&lt;meta name="title"&gt;'], ans:1 },
+      { q:'Q16. You want to show a video directly in the browser without a plugin. Which HTML5 element do you use?', opts:['&lt;embed&gt;','&lt;object&gt;','&lt;video&gt;','&lt;media&gt;'], ans:2 },
+      { q:'Q17. You need a text input that only accepts email addresses. Which input type do you use?', opts:['type="text"','type="email"','type="url"','type="string"'], ans:1 },
+      { q:'Q18. A developer uses &lt;b&gt; for all bold text. What is the more semantic alternative?', opts:['&lt;bold&gt;','&lt;strong&gt;','&lt;em&gt;','&lt;mark&gt;'], ans:1 },
+      { q:'Q19. You want search engines to understand which part of your page is the primary content. Which element should wrap it?', opts:['&lt;div id="main"&gt;','&lt;section&gt;','&lt;main&gt;','&lt;article&gt;'], ans:2 },
+      { q:'Q20. An anchor tag opens a link in the same tab. How do you make it open in a new tab?', opts:['rel="new"','target="_blank"','href="newtab"','link="external"'], ans:1 },
+      // --- Q21–30: Syntax ---
+      { q:'Q21. Which HTML tag correctly creates an ordered list item?', opts:['&lt;ul&gt;&lt;li&gt;Item&lt;/li&gt;&lt;/ul&gt;','&lt;ol&gt;&lt;li&gt;Item&lt;/li&gt;&lt;/ol&gt;','&lt;list&gt;&lt;item&gt;Item&lt;/item&gt;&lt;/list&gt;','&lt;dl&gt;&lt;li&gt;Item&lt;/li&gt;&lt;/dl&gt;'], ans:1 },
+      { q:'Q22. What is wrong with: &lt;img src="photo.jpg"&gt;? (Accessibility)', opts:['Nothing is wrong','The src path may be wrong','The alt attribute is missing','The tag is not closed correctly'], ans:2 },
+      { q:'Q23. Which is the correct way to create a text input in a form?', opts:['&lt;input text="name"&gt;','&lt;textbox name="name"&gt;','&lt;input type="text" name="name"&gt;','&lt;field type="text" name="name"&gt;'], ans:2 },
+      { q:'Q24. Which HTML correctly creates a link to google.com that says "Visit Google"?', opts:['&lt;a&gt;Visit Google&lt;/a href="https://google.com"&gt;','&lt;a href="https://google.com"&gt;Visit Google&lt;/a&gt;','&lt;link href="https://google.com"&gt;Visit Google&lt;/link&gt;','&lt;url="https://google.com"&gt;Visit Google&lt;/url&gt;'], ans:1 },
+      { q:'Q25. What does this HTML do? &lt;input type="hidden" name="token" value="abc123"&gt;', opts:['Shows a password field','Creates an invisible input not shown to the user','Disables the input','Creates a read-only field'], ans:1 },
+      { q:'Q26. Which tag pair correctly wraps the main visible content of a webpage?', opts:['&lt;html&gt;&lt;/html&gt;','&lt;head&gt;&lt;/head&gt;','&lt;body&gt;&lt;/body&gt;','&lt;main&gt;&lt;/main&gt;'], ans:2 },
+      { q:'Q27. What is the correct HTML for a checkbox input?', opts:['&lt;input type="check"&gt;','&lt;input type="checkbox"&gt;','&lt;checkbox&gt;','&lt;input check="true"&gt;'], ans:1 },
+      { q:'Q28. Which attribute makes a form input field required before submission?', opts:['mandatory','validate','required','must'], ans:2 },
+      { q:'Q29. What does &lt;meta charset="UTF-8"&gt; do?', opts:['Sets the page language','Specifies the character encoding','Links a stylesheet','Defines the viewport'], ans:1 },
+      { q:'Q30. Which HTML correctly embeds a YouTube video using an iframe?', opts:['&lt;video src="youtube.com/watch?v=abc"&gt;','&lt;iframe src="https://www.youtube.com/embed/abc"&gt;&lt;/iframe&gt;','&lt;embed youtube="abc"&gt;','&lt;youtube id="abc"&gt;'], ans:1 },
+    ]},
+    activities:[
+      { id:'html-a1', title:'Semantic HTML Page', desc:'Rewrite a non-semantic page using proper semantic tags (header, nav, main, article, footer).' },
+      { id:'html-a2', title:'HTML Form', desc:'Build a contact form with name, email, message textarea, and a submit button using proper labels.' },
+    ],
+    project:{ title:'Personal Portfolio Website', desc:'Build a multi-section HTML portfolio: About, Skills, Projects, Contact form.' },
+  },
+
+  // ════════════════════════════════════════════════════
+  // JAVA
+  // ════════════════════════════════════════════════════
+  {
+    numId:5, id:'JAVA',
+    title:'JAVA',
+    description:'Build secure, high-performance enterprise applications and Android apps using a powerful, platform-independent language.',
+    duration:'8 hours',
+    thumb:'https://uploads.onecompiler.io/44hcec5gg/44hc8bkmc/java-logo.png',
+    modules:[
+      { title:'Module 1: Foundations', lessons:[
+        { id:'java-1', title:'Introduction to Java', duration:'20 min', videoId:'K0t-szLbys4',
+          handout:'Java is class-based and object-oriented. It runs on the JVM.',
+          points:['Write Once, Run Anywhere (WORA)','Compiled to bytecode, run on JVM','Strongly typed language','Large standard library'] },
+        { id:'java-2', title:'Variables and Data Types', duration:'22 min', videoId:'HAnw168huqA',
+          handout:'Java has primitive types and reference types.',
+          points:['int stores whole numbers','double stores decimals','boolean stores true or false','String is a reference type'] },
+      ]},
+      { title:'Module 2: OOP', lessons:[
+        { id:'java-3', title:'Control Flow', duration:'18 min', videoId:'Iwpi1Lm6dFo',
+          handout:'if-else, for/while loops, and switch control how code executes.',
+          points:['if-else evaluates boolean conditions','for loops run a set number of times','while loops run while condition is true','switch for multi-branch logic'] },
+        { id:'java-4', title:'Classes and Objects', duration:'25 min', videoId:'8IXCK1e8iFw',
+          handout:'A class is a blueprint; objects are instances.',
+          points:['Class defines fields and methods','Object is an instance of a class','Constructor initializes an object','Access modifiers control visibility'] },
+      ]},
+    ],
+    quizzes:[
+      { id:'java-q1', title:'Java Quiz 1', passPct:0.60, questions:[
+        { q:'What does OOP stand for?', opts:['Object-Oriented Programming','Object Operation Process','Output-Oriented Program','Open Object Protocol'], ans:0 },
+        { q:'Which of the following is NOT an OOP principle?', opts:['Encapsulation','Inheritance','Compilation','Polymorphism'], ans:2 },
+        { q:'What is a class in Java?', opts:['A function','A blueprint for objects','A variable','A loop'], ans:1 },
+        { q:'Which syntax correctly declares a class?', opts:['Class MyClass { }','class MyClass { }','define MyClass { }','new class MyClass { }'], ans:1 },
+        { q:'What is an object?', opts:['A method','A data type','An instance of a class','A loop'], ans:2 },
+      ]},
+    ],
+    exam:{ title:'Java Final Exam', passPct:0.75, questions:[
+      // --- Q1–10: Multiple Choice ---
+      { q:'Q1. What does JVM stand for?', opts:['Java Virtual Machine','Java Variable Method','Java Verified Module','Joint Virtual Memory'], ans:0 },
+      { q:'Q2. Which of the following is a primitive data type in Java?', opts:['String','Integer','int','Object'], ans:2 },
+      { q:'Q3. What is the correct way to declare a constant in Java?', opts:['const int MAX = 10;','final int MAX = 10;','static int MAX = 10;','readonly int MAX = 10;'], ans:1 },
+      { q:'Q4. Which keyword is used to inherit a class in Java?', opts:['implements','inherits','extends','super'], ans:2 },
+      { q:'Q5. What is the default value of a boolean variable in Java?', opts:['true','null','0','false'], ans:3 },
+      { q:'Q6. Which access modifier makes a method accessible from any class?', opts:['private','protected','default','public'], ans:3 },
+      { q:'Q7. What does the "static" keyword mean for a method?', opts:['It runs once','It belongs to the class, not an instance','It is private','It cannot be overridden'], ans:1 },
+      { q:'Q8. Which Java class is the parent of all classes?', opts:['Base','Super','Object','Main'], ans:2 },
+      { q:'Q9. What is an interface in Java?', opts:['A type of loop','A class with only abstract methods and constants','A variable container','A built-in method'], ans:1 },
+      { q:'Q10. Which exception is thrown when you divide by zero in Java?', opts:['NullPointerException','ArrayIndexOutOfBoundsException','ArithmeticException','IllegalArgumentException'], ans:2 },
+      // --- Q11–20: Situational ---
+      { q:'Q11. A Java program throws "NullPointerException" at runtime. What is the most likely cause?', opts:['Wrong import','Calling a method on an object that was never initialized','Integer overflow','Missing semicolon'], ans:1 },
+      { q:'Q12. You are building an app where Dog and Cat should both have a speak() method but with different sounds. Which OOP concept applies?', opts:['Encapsulation','Abstraction','Polymorphism','Composition'], ans:2 },
+      { q:'Q13. Your team wants all subclasses to implement a method called "calculateArea()". Which design approach do you use?', opts:['Make calculateArea() private','Create an abstract class or interface with calculateArea()','Use a static method','Copy the method into each class'], ans:1 },
+      { q:'Q14. A user enters "abc" when your program expects an int. What kind of exception should you catch?', opts:['ArithmeticException','NullPointerException','NumberFormatException','IndexOutOfBoundsException'], ans:2 },
+      { q:'Q15. You need to store 50 student scores and sort them. Which Java structure is most appropriate?', opts:['HashMap','LinkedList','int[]  or ArrayList&lt;Integer&gt;','Stack'], ans:2 },
+      { q:'Q16. Your Java app has memory leak concerns. What Java feature automatically manages memory?', opts:['Static methods','Manual memory allocation','Garbage Collector','Pointers'], ans:2 },
+      { q:'Q17. You want a method to accept both int and double parameters (same method name). Which concept allows this?', opts:['Overriding','Encapsulation','Method Overloading','Abstraction'], ans:2 },
+      { q:'Q18. A class "Employee" should prevent its salary field from being changed directly from outside. What is the correct approach?', opts:['Make salary public','Make salary private and provide getter/setter methods','Use a constant','Use a static variable'], ans:1 },
+      { q:'Q19. You need to guarantee a block of code runs even if an exception occurs (e.g., closing a file). Which Java block do you use?', opts:['catch','throws','finally','else'], ans:2 },
+      { q:'Q20. Two classes "Flyable" and "Swimmable" both define a method "move()". A class "Duck" needs both behaviors. How do you handle this in Java?', opts:['Extend both classes','Use two interfaces','Use abstract class only','Override the main method'], ans:1 },
+      // --- Q21–30: Syntax ---
+      { q:'Q21. Which correctly declares an integer array of size 5 in Java?', opts:['int arr = new int[5];','int[] arr = new int[5];','array&lt;int&gt; arr = new array(5);','int arr[5];'], ans:1 },
+      { q:'Q22. What is the output of: System.out.println(10 / 3); in Java?', opts:['3.33','3','4','Error'], ans:1 },
+      { q:'Q23. Which syntax correctly creates an object of class "Dog"?', opts:['Dog d = Dog();','Dog d = new Dog();','new Dog d;','create Dog d = new Dog;'], ans:1 },
+      { q:'Q24. What is wrong with: public static void main(String args[]) { System.out.println("Hi") }', opts:['Nothing','Missing semicolon after println statement','args should not have brackets','void should be int'], ans:1 },
+      { q:'Q25. Which correctly defines a constructor for a class named "Car"?', opts:['void Car() {}','public Car() {}','constructor Car() {}','Car Car() {}'], ans:1 },
+      { q:'Q26. What does this print? int x = 10; System.out.println(x &gt; 5 ? "big" : "small");', opts:['big','small','true','10'], ans:0 },
+      { q:'Q27. Which syntax correctly implements an interface named "Drawable" in a class "Circle"?', opts:['class Circle extends Drawable','class Circle uses Drawable','class Circle implements Drawable','class Circle : Drawable'], ans:2 },
+      { q:'Q28. Which line correctly casts a double to an int in Java?', opts:['int x = double(3.14);','int x = (int) 3.14;','int x = int(3.14);','int x = convert(3.14);'], ans:1 },
+      { q:'Q29. What is the correct way to handle an exception in Java?', opts:['if-catch { }','try { } catch(Exception e) { }','handle { } recover { }','try { } handle { }'], ans:1 },
+      { q:'Q30. Which syntax correctly uses a for-each loop over an array "nums" in Java?', opts:['for each(int n in nums)','for(int n : nums)','foreach(int n in nums)','for(n in nums)'], ans:1 },
+    ]},
+    activities:[
+      { id:'java-a1', title:'Basic Java Program', desc:'Write a Java program that asks for a user\'s name and prints a greeting. Submit a GitHub or Replit link.' },
+    ],
+    project:{ title:'Simple Bank System', desc:'Build a console-based Java bank system with Account, SavingsAccount, CheckingAccount classes.' },
+  },
+
+  // ════════════════════════════════════════════════════
+  // SQL
+  // ════════════════════════════════════════════════════
+  {
+    numId:6, id:'SQL',
+    title:'SQL',
+    description:'Query and manage complex databases to extract valuable insights and power data-driven applications with ease.',
+    duration:'9 hours',
+    thumb:'https://uploads.onecompiler.io/44hcec5gg/44hdnkzpf/cq5dam.web.1280.1280.png',
+    modules:[
+      { title:'Module 1: Querying', lessons:[
+        { id:'sql-1', title:'What is SQL?', duration:'22 min', videoId:'sVKQn2I4HDM',
+          handout:'SQL interacts with relational databases.',
+          points:['SQL is declarative','Tables have rows and columns','Primary keys uniquely identify rows','Common DBs: MySQL, PostgreSQL, SQLite'] },
+        { id:'sql-2', title:'Select Queries', duration:'20 min', videoId:'vEFSS7_i5P4',
+          handout:'SELECT retrieves data. WHERE filters, ORDER BY sorts, LIMIT restricts.',
+          points:['SELECT * gets all columns','WHERE filters by condition','ORDER BY col ASC/DESC sorts','LIMIT n restricts rows'] },
+      ]},
+      { title:'Module 2: Advanced', lessons:[
+        { id:'sql-3', title:'Joins Explained', duration:'28 min', videoId:'gFQNPmLKj1k',
+          handout:'JOINs combine tables on a related column.',
+          points:['INNER JOIN: matching rows only','LEFT JOIN: all left + matched right','Join uses ON table1.col = table2.col','Aliases with AS'] },
+        { id:'sql-4', title:'Fundamentals of SQL', duration:'25 min', videoId:'MqN4lHhvKkA',
+          handout:'INSERT, UPDATE, DELETE modify data in tables.',
+          points:['INSERT INTO adds rows','UPDATE changes existing data','DELETE removes rows','WHERE is critical with UPDATE/DELETE'] },
+      ]},
+    ],
+    quizzes:[
+      { id:'sql-q1', title:'SQL Quiz 1', passPct:0.60, questions:[
+        { q:'What does SQL stand for?', opts:['Structured Question Language','Simple Query Language','Structured Query Language','System Query Logic'], ans:2 },
+        { q:'Which SQL keyword is used to retrieve data from a table?', opts:['GET','SELECT','FETCH','SHOW'], ans:1 },
+        { q:'Which clause is used to filter rows?', opts:['ORDER BY','WHERE','LIMIT','GROUP'], ans:1 },
+        { q:'Which symbol selects all columns?', opts:['%','#','*','@'], ans:2 },
+        { q:'Which keyword removes duplicate values from results?', opts:['UNIQUE','DISTINCT','REMOVE','FILTER'], ans:1 },
+      ]},
+    ],
+    exam:{ title:'SQL Final Exam', passPct:0.75, questions:[
+      // --- Q1–10: Multiple Choice ---
+      { q:'Q1. What does SQL stand for?', opts:['Structured Query Language','Simple Question Language','Structured Question Logic','System Query Language'], ans:0 },
+      { q:'Q2. Which SQL command retrieves data from a table?', opts:['GET','FETCH','SELECT','PULL'], ans:2 },
+      { q:'Q3. What does a PRIMARY KEY do in a table?', opts:['Allows duplicate values','Uniquely identifies each row','Links two tables','Sorts the data'], ans:1 },
+      { q:'Q4. Which SQL clause filters rows based on a condition?', opts:['HAVING','GROUP BY','WHERE','ORDER BY'], ans:2 },
+      { q:'Q5. Which JOIN returns only rows that have matching values in both tables?', opts:['LEFT JOIN','RIGHT JOIN','FULL JOIN','INNER JOIN'], ans:3 },
+      { q:'Q6. Which SQL command adds new rows to a table?', opts:['ADD','INSERT INTO','UPDATE','CREATE'], ans:1 },
+      { q:'Q7. Which command modifies existing data in a table?', opts:['INSERT','MODIFY','UPDATE','CHANGE'], ans:2 },
+      { q:'Q8. What does the GROUP BY clause do?', opts:['Sorts results','Filters groups','Groups rows with the same value for aggregate functions','Joins tables'], ans:2 },
+      { q:'Q9. Which aggregate function returns the number of rows?', opts:['SUM()','AVG()','MAX()','COUNT()'], ans:3 },
+      { q:'Q10. What does a FOREIGN KEY do?', opts:['Sorts a column','Creates a primary key','Links a column to a primary key in another table','Removes duplicates'], ans:2 },
+      // --- Q11–20: Situational ---
+      { q:'Q11. A sales manager wants to see all orders from customers in "Manila". Which clause do you use?', opts:['ORDER BY city = "Manila"','GROUP BY city','WHERE city = "Manila"','HAVING city = "Manila"'], ans:2 },
+      { q:'Q12. You need to combine customer names from a "customers" table with their order totals from an "orders" table. They share a customer_id. Which SQL operation do you use?', opts:['UNION','SUBQUERY','JOIN','GROUP BY'], ans:2 },
+      { q:'Q13. A query returns duplicate product names. Which keyword removes duplicates from the result?', opts:['UNIQUE','FILTER','DISTINCT','REMOVE'], ans:2 },
+      { q:'Q14. You need the total sales amount grouped by each product category. Which clauses do you use?', opts:['WHERE and ORDER BY','GROUP BY and SUM()','HAVING and COUNT()','JOIN and AVG()'], ans:1 },
+      { q:'Q15. An admin accidentally runs DELETE FROM orders; without a WHERE clause. What happens?', opts:['Nothing, WHERE is required','Only recent rows are deleted','All rows in the orders table are deleted','The table structure is dropped'], ans:2 },
+      { q:'Q16. You want to find all customers who have NOT placed an order. Which JOIN should you use?', opts:['INNER JOIN','RIGHT JOIN','LEFT JOIN with NULL check','FULL JOIN'], ans:2 },
+      { q:'Q17. You need only the top 5 highest-paid employees. Which SQL clauses do you combine?', opts:['WHERE and LIMIT','ORDER BY salary DESC and LIMIT 5','GROUP BY salary and COUNT','HAVING salary &gt; AVG'], ans:1 },
+      { q:'Q18. A query using WHERE AVG(salary) &gt; 50000 returns an error. What is the correct fix?', opts:['Use WHERE salary &gt; 50000','Replace WHERE with HAVING','Add GROUP BY first','Use DISTINCT'], ans:1 },
+      { q:'Q19. You need to add a new column "email" to an existing "students" table. Which SQL command do you use?', opts:['UPDATE students ADD email','INSERT INTO students (email)','ALTER TABLE students ADD email VARCHAR(100)','MODIFY TABLE students email'], ans:2 },
+      { q:'Q20. A report needs the average order value per customer, but only for customers with more than 3 orders. Which clause filters the groups?', opts:['WHERE COUNT(*) &gt; 3','HAVING COUNT(*) &gt; 3','GROUP BY COUNT &gt; 3','LIMIT 3'], ans:1 },
+      // --- Q21–30: Syntax ---
+      { q:'Q21. Which SQL query retrieves all columns from a table named "students"?', opts:['GET * FROM students;','FETCH ALL students;','SELECT * FROM students;','SHOW students;'], ans:2 },
+      { q:'Q22. What is wrong with: SELECT name FROM students WHERE age = "25";  (age is an integer column)', opts:['Nothing is wrong','SELECT should be GET','"25" should be 25 without quotes','FROM should be IN'], ans:2 },
+      { q:'Q23. Which query correctly inserts a new student named "Ana" aged 20?', opts:['ADD INTO students VALUES ("Ana", 20);','INSERT students ("Ana", 20);','INSERT INTO students (name, age) VALUES ("Ana", 20);','PUT INTO students (name, age) = ("Ana", 20);'], ans:2 },
+      { q:'Q24. Which correctly updates the grade of student with id=5 to "A"?', opts:['CHANGE students SET grade="A" WHERE id=5;','UPDATE students SET grade="A" WHERE id=5;','MODIFY students grade="A" WHERE id=5;','SET grade="A" IN students WHERE id=5;'], ans:1 },
+      { q:'Q25. Which query deletes only students older than 30?', opts:['REMOVE FROM students WHERE age &gt; 30;','DELETE students WHERE age &gt; 30;','DELETE FROM students WHERE age &gt; 30;','DROP FROM students WHERE age &gt; 30;'], ans:2 },
+      { q:'Q26. Which query counts all rows in the "orders" table?', opts:['COUNT(*) FROM orders;','SELECT COUNT(*) FROM orders;','SELECT SUM(*) FROM orders;','TOTAL FROM orders;'], ans:1 },
+      { q:'Q27. Which correctly joins "orders" and "customers" on customer_id?', opts:['SELECT * FROM orders JOIN customers WHERE orders.customer_id = customers.id;','SELECT * FROM orders INNER JOIN customers ON orders.customer_id = customers.id;','SELECT * FROM orders, customers ON customer_id;','SELECT * JOIN orders WITH customers USING customer_id;'], ans:1 },
+      { q:'Q28. Which query finds the highest salary in the "employees" table?', opts:['SELECT HIGHEST(salary) FROM employees;','SELECT TOP(salary) FROM employees;','SELECT MAX(salary) FROM employees;','SELECT salary ORDER BY salary DESC LIMIT 1 FROM employees;'], ans:2 },
+      { q:'Q29. Which SQL creates a new table called "products" with an id and name column?', opts:['MAKE TABLE products (id INT, name VARCHAR(100));','NEW TABLE products (id INT, name VARCHAR(100));','CREATE TABLE products (id INT, name VARCHAR(100));','BUILD TABLE products {id INT, name VARCHAR(100)};'], ans:2 },
+      { q:'Q30. Which query retrieves students sorted by last name alphabetically?', opts:['SELECT * FROM students SORT BY last_name;','SELECT * FROM students ORDER BY last_name ASC;','SELECT * FROM students GROUP BY last_name;','SELECT * FROM students ARRANGE BY last_name;'], ans:1 },
+    ]},
+    activities:[
+      { id:'sql-a1', title:'Database Design', desc:'Design a database schema for a library system with at least 3 tables. Write the CREATE TABLE statements.' },
+      { id:'sql-a2', title:'SQL Query Practice', desc:'Write 5 SQL queries on a dataset of your choice: SELECT, WHERE, JOIN, GROUP BY, and ORDER BY.' },
+    ],
+    project:{ title:'E-Commerce Database', desc:'Design and implement a full SQL database for an e-commerce store with products, customers, and orders.' },
+  },
+];
+
+/* ══════════════════════════════════════════════════════
+   FIRESTORE HELPERS
+══════════════════════════════════════════════════════ */
+let currentUser = null;
+let fsProgress  = { lessons:{}, assessments:{} };
+
+async function loadFsProgress() {
+  try {
+    const snap = await getDoc(doc(db, 'progress', currentUser.uid));
+    if (snap.exists()) fsProgress = snap.data();
+    else fsProgress = { lessons:{}, assessments:{} };
+  } catch(e) { console.warn('Firestore load error:', e); }
+}
+
+async function saveFsProgress() {
+  try {
+    await setDoc(doc(db, 'progress', currentUser.uid), fsProgress, { merge: true });
+  } catch(e) { console.warn('Firestore save error:', e); }
+}
+
+function getCourseProgress(numId) {
+  const cid = String(numId);
+  const submissionData = fsProgress.assessments?.[cid]?.submissionData || {};
+  const projectData    = submissionData['project'] || {};
+  const projectPassed  = !!(projectData.grade?.passed === true);
+  const projectSubmitted = !!fsProgress.assessments?.[cid]?.projectSubmitted;
+  const activityGrades = {};
+  Object.entries(submissionData).forEach(([id, data]) => {
+    if (id !== 'project') activityGrades[id] = data;
+  });
+  return {
+    lessons:             fsProgress.lessons?.[cid]                          || {},
+    quizScores:          fsProgress.assessments?.[cid]?.quizScores          || {},
+    examScore:           fsProgress.assessments?.[cid]?.examScore           || null,
+    submittedActivities: fsProgress.assessments?.[cid]?.submittedActivities || [],
+    projectSubmitted:    projectSubmitted,
+    projectPassed:       projectPassed,
+    projectData:         projectData,
+    activityGrades:      activityGrades,
+    submissionData:      submissionData,
+    certEarned:          fsProgress.assessments?.[cid]?.certEarned          || false,
+  };
+}
+
+async function markLessonDone(numId, lessonId) {
+  const cid = String(numId);
+  if (!fsProgress.lessons) fsProgress.lessons = {};
+  if (!fsProgress.lessons[cid]) fsProgress.lessons[cid] = {};
+  fsProgress.lessons[cid][lessonId] = true;
+  await saveFsProgress();
+}
+
+async function saveQuizScore(numId, quizId, scoreObj) {
+  const cid = String(numId);
+  if (!fsProgress.assessments) fsProgress.assessments = {};
+  if (!fsProgress.assessments[cid]) fsProgress.assessments[cid] = {};
+  if (!fsProgress.assessments[cid].quizScores) fsProgress.assessments[cid].quizScores = {};
+  fsProgress.assessments[cid].quizScores[quizId] = scoreObj;
+  await saveFsProgress();
+}
+
+async function saveExamScore(numId, scoreObj) {
+  const cid = String(numId);
+  if (!fsProgress.assessments) fsProgress.assessments = {};
+  if (!fsProgress.assessments[cid]) fsProgress.assessments[cid] = {};
+  fsProgress.assessments[cid].examScore = scoreObj;
+  await saveFsProgress();
+}
+
+async function saveActivity(numId, actId, link, note) {
+  const cid = String(numId);
+  if (!fsProgress.assessments) fsProgress.assessments = {};
+  if (!fsProgress.assessments[cid]) fsProgress.assessments[cid] = {};
+  if (!fsProgress.assessments[cid].submittedActivities) fsProgress.assessments[cid].submittedActivities = [];
+  if (!fsProgress.assessments[cid].submittedActivities.includes(actId)) {
+    fsProgress.assessments[cid].submittedActivities.push(actId);
+  }
+  if (!fsProgress.assessments[cid].submissionData) fsProgress.assessments[cid].submissionData = {};
+  fsProgress.assessments[cid].submissionData[actId] = {
+    type: 'activity', link: link || '', note: note || '', submitted: true,
+    date: new Date().toLocaleDateString(), submittedAt: new Date().toISOString(),
+    studentEmail: currentUser.email || '', studentName: currentUser.displayName || currentUser.email || '',
+  };
+  fsProgress.email = currentUser.email || '';
+  fsProgress.displayName = currentUser.displayName || currentUser.email || '';
+  await saveFsProgress();
+}
+
+async function saveProject(numId, link, note) {
+  const cid = String(numId);
+  if (!fsProgress.assessments) fsProgress.assessments = {};
+  if (!fsProgress.assessments[cid]) fsProgress.assessments[cid] = {};
+  fsProgress.assessments[cid].projectSubmitted = true;
+  if (!fsProgress.assessments[cid].submissionData) fsProgress.assessments[cid].submissionData = {};
+  fsProgress.assessments[cid].submissionData['project'] = {
+    type: 'project', link: link || '', note: note || '', submitted: true,
+    date: new Date().toLocaleDateString(), submittedAt: new Date().toISOString(),
+    studentEmail: currentUser.email || '', studentName: currentUser.displayName || currentUser.email || '',
+  };
+  fsProgress.email = currentUser.email || '';
+  fsProgress.displayName = currentUser.displayName || currentUser.email || '';
+  await saveFsProgress();
+}
+
+async function saveCertEarned(numId) {
+  const cid = String(numId);
+  if (!fsProgress.assessments) fsProgress.assessments = {};
+  if (!fsProgress.assessments[cid]) fsProgress.assessments[cid] = {};
+  fsProgress.assessments[cid].certEarned = true;
+  await saveFsProgress();
+}
+
+function getAllLessonsFlat(course) {
+  return course.modules.flatMap(m => m.lessons);
+}
+
+function checkCertEligible(course, prog) {
+  const allLessons = getAllLessonsFlat(course);
+  const lessonsOk  = allLessons.every(l => !!prog.lessons[l.id]);
+  const quizzesOk  = course.quizzes.every(q => { const sc = prog.quizScores[q.id]; return sc && sc.passed === true; });
+  const examOk = !!(prog.examScore && prog.examScore.passed === true);
+  const actsOk = course.activities.every(a => {
+    const actData = prog.activityGrades?.[a.id] || prog.submissionData?.[a.id];
+    if (actData?.grade) return actData.grade.passed === true;
+    if (actData?.submitted) return true;
+    return prog.submittedActivities.includes(a.id);
+  });
+  const projOk = !!prog.projectPassed;
+  return { lessonsOk, quizzesOk, examOk, actsOk, projOk, eligible: lessonsOk && quizzesOk && examOk && actsOk && projOk };
+}
+
+let toastTimer;
+function showToast(title, desc, isSuccess = true) {
+  const t = document.getElementById('toast');
+  t.style.borderLeftColor = isSuccess ? 'var(--gold)' : 'var(--red)';
+  document.getElementById('toast-title').textContent = title;
+  document.getElementById('toast-desc').textContent  = desc;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3800);
+}
+
+window.toggleMobileMenu = function() {
+  document.getElementById('mobileSidebar').classList.toggle('open');
+  document.getElementById('mobileOverlay').classList.toggle('show');
+};
+
+window.doLogout = async function() {
+  await signOut(auth);
+  window.location.href = 'login.html';
+};
+
+function renderGrid() {
+  const grid = document.getElementById('courses-grid');
+  grid.innerHTML = '';
+  COURSES.forEach(course => {
+    const prog        = getCourseProgress(course.numId);
+    const allLessons  = getAllLessonsFlat(course);
+    const allLessonIds = new Set(allLessons.map(l => l.id));
+    const doneLessons = Object.keys(prog.lessons).filter(id => allLessonIds.has(id)).length;
+    const pct         = allLessons.length ? Math.min(100, Math.round(doneLessons / allLessons.length * 100)) : 0;
+    const { eligible } = checkCertEligible(course, prog);
+    const certEarned  = prog.certEarned || eligible;
+    const pdfUrl      = PDF_LINKS[course.id] || '';
+    const hasPdf      = pdfUrl.length > 0;
+
+    const card = document.createElement('div');
+    card.className = 'course-card';
+    card.innerHTML = `
+      <img src="${course.thumb}" alt="${course.title}" onerror="this.style.background='#e5e7eb';this.removeAttribute('src')">
+      <div class="course-card-body">
+        <h3>${course.title}</h3>
+        <p>${course.description}</p>
+        <div class="course-duration">&#128337; ${course.duration}</div>
+        <div class="card-progress-row">
+          <div class="card-prog-track"><div class="card-prog-bar" style="width:${pct}%"></div></div>
+          <span class="card-prog-label">${pct}%</span>
+        </div>
+        ${certEarned ? `<div class="cert-badge">&#127941; Certificate Earned</div>` : ''}
+        <button class="btn-start" onclick="openPlayer('${course.id}')">
+          ${pct > 0 ? '&#9654; Continue Learning' : '&#9654; Start Course'}
+        </button>
+        ${hasPdf
+          ? `<a class="card-pdf-link" href="${pdfUrl}" target="_blank" rel="noopener noreferrer">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Download Course Handout PDF
+            </a>`
+          : `<span class="card-pdf-link disabled">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              PDF Handout Coming Soon
+            </span>`
+        }
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+let activeCourse    = null;
+let activeLessonIdx = 0;
+
+window.openPlayer = function(courseId) {
+  activeCourse    = COURSES.find(c => c.id === courseId);
+  activeLessonIdx = 0;
+  document.getElementById('pm-course-title').textContent = activeCourse.title;
+  const pdfUrl = PDF_LINKS[activeCourse.id] || '';
+  const pdfBtn = document.getElementById('pm-pdf-btn');
+  if (pdfUrl) {
+    pdfBtn.href = pdfUrl; pdfBtn.className = 'download-btn'; pdfBtn.target = '_blank'; pdfBtn.onclick = null;
+  } else {
+    pdfBtn.href = '#'; pdfBtn.className = 'download-btn no-pdf'; pdfBtn.target = '_self';
+    pdfBtn.onclick = (e) => { e.preventDefault(); showToast('PDF Coming Soon', 'The handout for this course will be available shortly.'); };
+  }
+  switchTab('lessons'); renderLessonList(); loadLesson(0); updateTopProgress(); renderCertReqs();
+  document.getElementById('playerModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closePlayer = function() {
+  document.getElementById('playerModal').classList.remove('open');
+  document.body.style.overflow = '';
+  renderGrid();
+};
+
+const PANELS = ['lessons','quiz','exam','activity','project'];
+window.switchTab = function(name) {
+  PANELS.forEach(p => {
+    document.getElementById('panel-' + p).style.display = p === name ? '' : 'none';
+    const tab = document.getElementById('tab-' + p);
+    if(tab) tab.classList.toggle('active', p === name);
+  });
+  if(name === 'quiz')     renderQuizPanel();
+  if(name === 'exam')     renderExamPanel();
+  if(name === 'activity') renderActivityPanel();
+  if(name === 'project')  renderProjectPanel();
+};
+
+function renderLessonList() {
+  const list = document.getElementById('pm-lesson-list');
+  list.innerHTML = '';
+  const prog = getCourseProgress(activeCourse.numId);
+  let globalIdx = 0;
+  activeCourse.modules.forEach(mod => {
+    const modDiv = document.createElement('div');
+    modDiv.className = 'mod-title';
+    modDiv.textContent = mod.title;
+    list.appendChild(modDiv);
+    mod.lessons.forEach(lesson => {
+      const idx    = globalIdx++;
+      const isDone = !!prog.lessons[lesson.id];
+      const item   = document.createElement('div');
+      item.className = 'lesson-item' + (idx === activeLessonIdx ? ' active' : '');
+      item.id = 'li-' + idx;
+      item.innerHTML = `
+        <div class="li-icon ${isDone ? 'done' : ''}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="${isDone ? '#16A34A' : '#9CA3AF'}" stroke-width="2.5">
+            ${isDone ? '<polyline points="20 6 9 17 4 12"/>' : '<polygon points="5 3 19 12 5 21 5 3"/>'}
+          </svg>
+        </div>
+        <div><div class="li-name">${lesson.title}</div><div class="li-duration">${lesson.duration}</div></div>
+      `;
+      item.onclick = () => loadLesson(idx);
+      list.appendChild(item);
+    });
+  });
+}
+
+function loadLesson(idx) {
+  activeLessonIdx = idx;
+  const lessons = getAllLessonsFlat(activeCourse);
+  const lesson  = lessons[idx];
+  if(!lesson) return;
+  lessons.forEach((_,i) => { const el = document.getElementById('li-' + i); if(el) el.classList.toggle('active', i === idx); });
+  document.getElementById('pm-lesson-title').textContent  = lesson.title;
+  document.getElementById('pm-lesson-sub').textContent    = lesson.duration + ' · ' + activeCourse.title;
+  document.getElementById('pm-handout-title').textContent = lesson.title + ' – Notes';
+  document.getElementById('pm-handout-text').textContent  = lesson.handout || '';
+  const pts = document.getElementById('pm-handout-points');
+  pts.innerHTML = '';
+  (lesson.points || []).forEach(p => { const li = document.createElement('li'); li.textContent = p; pts.appendChild(li); });
+  const wrap = document.getElementById('pm-video-wrap');
+  wrap.innerHTML = `
+    <div class="thumb-overlay" id="pm-thumb-overlay" onclick="pmPlayVideo()">
+      <img id="pm-vid-thumb" src="https://img.youtube.com/vi/${lesson.videoId}/hqdefault.jpg" alt="lesson thumbnail" />
+      <div class="play-btn-big"><svg viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+    </div>`;
+  const prog   = getCourseProgress(activeCourse.numId);
+  const isDone = !!prog.lessons[lesson.id];
+  const btn    = document.getElementById('pm-btn-complete');
+  btn.innerHTML = isDone ? '&#10003; Completed' : '&#10003; Mark as Complete';
+  btn.className = 'btn-complete' + (isDone ? ' done' : '');
+  updateTopProgress();
+}
+
+window.pmPlayVideo = function() {
+  const lessons = getAllLessonsFlat(activeCourse);
+  const lesson  = lessons[activeLessonIdx];
+  if(!lesson || !lesson.videoId) return;
+  const wrap = document.getElementById('pm-video-wrap');
+  wrap.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${lesson.videoId}?autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;"></iframe>`;
+};
+
+window.pmMarkComplete = async function() {
+  const lessons = getAllLessonsFlat(activeCourse);
+  const lesson  = lessons[activeLessonIdx];
+  if(!lesson) return;
+  const prog = getCourseProgress(activeCourse.numId);
+  if(!prog.lessons[lesson.id]) {
+    await markLessonDone(activeCourse.numId, lesson.id);
+    showToast('Lesson Complete! 🎉', lesson.title + ' marked as done.');
+  }
+  renderLessonList(); loadLesson(activeLessonIdx); renderCertReqs(); updateTopProgress();
+  const lessons2 = getAllLessonsFlat(activeCourse);
+  if(activeLessonIdx < lessons2.length - 1) { setTimeout(() => loadLesson(activeLessonIdx + 1), 500); }
+};
+
+function updateTopProgress() {
+  if(!activeCourse) return;
+  const prog  = getCourseProgress(activeCourse.numId);
+  const total = getAllLessonsFlat(activeCourse).length;
+  const allLessonIds = new Set(getAllLessonsFlat(activeCourse).map(l => l.id));
+  const done  = Object.keys(prog.lessons).filter(id => allLessonIds.has(id)).length;
+  const pct   = total ? Math.min(100, Math.round(done / total * 100)) : 0;
+  document.getElementById('pm-prog-bar').style.width       = pct + '%';
+  document.getElementById('pm-prog-text').textContent       = pct + '% complete';
+  document.getElementById('pm-prog-bar-main').style.width   = pct + '%';
+  document.getElementById('pm-prog-text-main').textContent  = pct + '%';
+}
+
+function renderQuizPanel() {
+  const panel = document.getElementById('quiz-list-panel');
+  panel.innerHTML = '';
+  document.getElementById('quiz-badge').textContent = activeCourse.quizzes.length;
+  const prog = getCourseProgress(activeCourse.numId);
+  activeCourse.quizzes.forEach(quiz => {
+    const sc          = prog.quizScores[quiz.id];
+    const statusClass = !sc ? 'chip-pending' : sc.passed ? 'chip-pass' : 'chip-fail';
+    const statusText  = !sc ? 'Not Started'  : sc.passed ? 'Passed'    : 'Failed';
+    const passCount   = Math.ceil(quiz.questions.length * (quiz.passPct || 0.60));
+    const card = document.createElement('div');
+    card.className = 'assess-card';
+    card.innerHTML = `
+      <div class="assess-card-hdr">
+        <div class="assess-icon quiz">&#128221;</div>
+        <div class="assess-card-info">
+          <h4>${quiz.title}</h4>
+          <p>${quiz.questions.length} questions · Pass score: ${Math.round((quiz.passPct||0.60)*100)}%</p>
+        </div>
+        <div class="assess-meta">
+          ${sc ? `<span class="assess-score">${sc.score}/${sc.total} (${sc.pct}%)</span>` : ''}
+          <span class="assess-chip ${statusClass}">${statusText}</span>
+          <button class="btn-assess ${sc ? 'retry' : 'start'}" onclick="openQuiz('${quiz.id}','quiz')">${sc ? 'Retry' : 'Start Quiz'}</button>
+        </div>
+      </div>
+      <div class="assess-card-body">
+        <p class="assess-body-note">Pass score: ${Math.round((quiz.passPct||0.60)*100)}% (${passCount}/${quiz.questions.length} correct). You can retake unlimited times.
+        ${sc && !sc.passed ? '<br><strong style="color:var(--red)">&#9888; You need a passing score on this quiz to unlock the final exam.</strong>' : ''}</p>
+      </div>`;
+    panel.appendChild(card);
+  });
+}
+
+function renderExamPanel() {
+  const panel = document.getElementById('exam-panel');
+  panel.innerHTML = '';
+  const exam          = activeCourse.exam;
+  const prog          = getCourseProgress(activeCourse.numId);
+  const sc            = prog.examScore;
+  const allQuizPassed = activeCourse.quizzes.every(q => prog.quizScores[q.id]?.passed === true);
+  const locked        = !allQuizPassed;
+  const statusClass   = !sc ? (locked ? 'chip-locked' : 'chip-pending') : sc.passed ? 'chip-pass' : 'chip-fail';
+  const statusText    = !sc ? (locked ? 'Locked' : 'Not Started') : sc.passed ? 'Passed' : 'Failed';
+  const passCount     = Math.ceil(exam.questions.length * (exam.passPct || 0.75));
+  const card = document.createElement('div');
+  card.className = 'assess-card';
+  card.innerHTML = `
+    <div class="assess-card-hdr">
+      <div class="assess-icon exam">&#128203;</div>
+      <div class="assess-card-info">
+        <h4>${exam.title}</h4>
+        <p>${exam.questions.length} questions · Pass score: ${Math.round((exam.passPct||0.75)*100)}% (${passCount}/${exam.questions.length} correct)</p>
+      </div>
+      <div class="assess-meta">
+        ${sc ? `<span class="assess-score">${sc.score}/${sc.total} (${sc.pct}%)</span>` : ''}
+        <span class="assess-chip ${statusClass}">${statusText}</span>
+        <button class="btn-assess ${locked ? 'locked' : sc ? 'retry' : 'start'}" ${locked ? 'disabled' : ''} onclick="openQuiz('__exam__','exam')">
+          ${locked ? '&#128274; Locked' : sc ? 'Retry Exam' : 'Take Exam'}
+        </button>
+      </div>
+    </div>
+    <div class="assess-card-body">
+      <p class="assess-body-note">
+        ${locked ? '&#128274; You must pass ALL quizzes first before taking the final exam.'
+          : sc && !sc.passed ? '&#9888; You need at least ' + Math.round((exam.passPct||0.75)*100) + '% to pass.'
+          : sc && sc.passed  ? '&#10003; Exam passed! This counts toward your certificate.'
+          : 'Score at least ' + Math.round((exam.passPct||0.75)*100) + '% to pass. The exam has 30 questions: 10 multiple choice, 10 situational, and 10 syntax.'}
+      </p>
+    </div>`;
+  panel.appendChild(card);
+}
+
+function renderActivityPanel() {
+  const panel = document.getElementById('activity-panel');
+  panel.innerHTML = '';
+  document.getElementById('act-badge').textContent = activeCourse.activities.length;
+  const prog = getCourseProgress(activeCourse.numId);
+  activeCourse.activities.forEach(act => {
+    const actData = prog.submissionData?.[act.id] || prog.activityGrades?.[act.id];
+    const submitted = !!(actData?.submitted) || prog.submittedActivities.includes(act.id);
+    const grade = actData?.grade || null;
+    const feedback = actData?.feedback || '';
+    let chipHtml = '', bodyHtml = '';
+    if (!submitted) {
+      chipHtml = '<span class="assess-chip chip-pending">Pending</span>';
+      bodyHtml = `<div class="submit-area">
+        <div><label>Your Response / Notes</label><textarea id="act-text-${act.id}" placeholder="Describe what you did..."></textarea></div>
+        <div><label>Link to your work (optional)</label><input type="url" id="act-url-${act.id}" placeholder="https://your-work-link.com"></div>
+        <p class="submit-note">Your submission will be saved and counts toward your certificate.</p>
+        <button class="btn-assess start" onclick="submitActivity('${act.id}')">Submit Activity</button>
+      </div>`;
+    } else if (!grade) {
+      chipHtml = '<span class="assess-chip chip-pending">⏳ Awaiting Grade</span>';
+      bodyHtml = '<p class="assess-body-note" style="color:var(--muted);">Submitted and awaiting instructor review.</p>';
+    } else if (grade.passed) {
+      chipHtml = `<span class="assess-chip chip-pass">✅ Passed · ${grade.score}/100</span>`;
+      bodyHtml = `<div style="background:#DCFCE7;border:1px solid #86EFAC;border-radius:10px;padding:14px 16px;">
+        <div style="font-weight:800;color:#16A34A;">✅ Activity Passed — ${grade.score}/100</div>
+        ${feedback ? `<div style="font-size:0.88rem;color:#166534;margin-top:6px;"><strong>Instructor Feedback:</strong> ${feedback}</div>` : ''}
+      </div>`;
+    } else {
+      chipHtml = `<span class="assess-chip chip-fail">❌ Failed · ${grade.score}/100</span>`;
+      bodyHtml = `<div style="background:#FEE2E2;border:1px solid #FCA5A5;border-radius:10px;padding:14px 16px;margin-bottom:14px;">
+        <div style="font-weight:800;color:#DC2626;">❌ Failed — ${grade.score}/100</div>
+        ${feedback ? `<div style="font-size:0.88rem;color:#991B1B;margin-top:6px;"><strong>Feedback:</strong> ${feedback}</div>` : ''}
+      </div>
+      <div class="submit-area">
+        <p class="submit-note" style="color:var(--red);font-weight:700;">Please review feedback and resubmit.</p>
+        <div><label>Your Response / Notes</label><textarea id="act-text-${act.id}" placeholder="Describe what you improved..."></textarea></div>
+        <div><label>Updated Link</label><input type="url" id="act-url-${act.id}" placeholder="https://your-updated-work-link.com"></div>
+        <button class="btn-assess start" onclick="submitActivity('${act.id}')">Resubmit Activity</button>
+      </div>`;
+    }
+    const card = document.createElement('div');
+    card.className = 'assess-card';
+    card.innerHTML = `
+      <div class="assess-card-hdr">
+        <div class="assess-icon act">&#128296;</div>
+        <div class="assess-card-info"><h4>${act.title}</h4><p>${act.desc}</p></div>
+        <div class="assess-meta">${chipHtml}</div>
+      </div>
+      <div class="assess-card-body">${bodyHtml}</div>`;
+    panel.appendChild(card);
+  });
+}
+
+window.submitActivity = async function(actId) {
+  const link = (document.getElementById('act-url-' + actId) || {}).value?.trim() || '';
+  const note = (document.getElementById('act-text-' + actId) || {}).value?.trim() || '';
+  await saveActivity(activeCourse.numId, actId, link, note);
+  showToast('Activity Submitted! ✅', 'Great work! Your activity has been recorded.');
+  renderActivityPanel(); renderCertReqs();
+};
+
+function renderProjectPanel() {
+  const panel = document.getElementById('project-panel');
+  panel.innerHTML = '';
+  const proj = activeCourse.project;
+  const prog = getCourseProgress(activeCourse.numId);
+  const done = prog.projectSubmitted;
+  const projData = prog.projectData || {};
+  const grade = projData.grade || null;
+  const feedback = projData.feedback || '';
+  let statusChip = '', bodyHtml = '';
+  if (!done) {
+    statusChip = '<span class="assess-chip chip-pending">Pending</span>';
+    bodyHtml = `<div class="submit-area">
+      <div><label>Project Description / Summary</label><textarea id="proj-text" placeholder="Describe your project..."></textarea></div>
+      <div><label>Link to your project (GitHub, Google Drive, etc.)</label><input type="url" id="proj-url" placeholder="https://your-project-link.com"></div>
+      <p class="submit-note">Submitting your project is required for the Certificate of Completion.</p>
+      <button class="btn-assess start" onclick="submitProject()">Submit Project</button>
+    </div>`;
+  } else if (!grade) {
+    statusChip = '<span class="assess-chip chip-pending">⏳ Awaiting Grade</span>';
+    bodyHtml = '<p class="assess-body-note" style="color:var(--muted);">Your project has been submitted and is awaiting instructor review.</p>';
+  } else if (grade.passed) {
+    statusChip = `<span class="assess-chip chip-pass">✅ Passed · ${grade.score}/100</span>`;
+    bodyHtml = `<div style="background:#DCFCE7;border:1px solid #86EFAC;border-radius:10px;padding:14px 16px;">
+      <div style="font-weight:800;color:#16A34A;">✅ Project Passed — ${grade.score}/100</div>
+      ${feedback ? `<div style="font-size:0.88rem;color:#166534;margin-top:6px;"><strong>Feedback:</strong> ${feedback}</div>` : ''}
+    </div>`;
+  } else {
+    statusChip = `<span class="assess-chip chip-fail">❌ Failed · ${grade.score}/100</span>`;
+    bodyHtml = `<div style="background:#FEE2E2;border:1px solid #FCA5A5;border-radius:10px;padding:14px 16px;margin-bottom:14px;">
+      <div style="font-weight:800;color:#DC2626;">❌ Failed — ${grade.score}/100</div>
+      ${feedback ? `<div style="font-size:0.88rem;color:#991B1B;margin-top:6px;"><strong>Feedback:</strong> ${feedback}</div>` : ''}
+    </div>
+    <div class="submit-area">
+      <p class="submit-note" style="color:var(--red);font-weight:700;">Please review feedback and resubmit.</p>
+      <div><label>Updated Project Link</label><input type="url" id="proj-url" placeholder="https://your-updated-project-link.com"></div>
+      <div><label>What you improved</label><textarea id="proj-text" placeholder="Describe what you changed..."></textarea></div>
+      <button class="btn-assess start" onclick="submitProject()">Resubmit Project</button>
+    </div>`;
+  }
+  const card = document.createElement('div');
+  card.className = 'assess-card';
+  card.innerHTML = `
+    <div class="assess-card-hdr">
+      <div class="assess-icon proj">&#128640;</div>
+      <div class="assess-card-info"><h4>${proj.title}</h4><p>${proj.desc}</p></div>
+      <div class="assess-meta">${statusChip}</div>
+    </div>
+    <div class="assess-card-body">${bodyHtml}</div>`;
+  panel.appendChild(card);
+  document.getElementById('proj-done-icon').style.display = (done && grade?.passed) ? '' : 'none';
+}
+
+window.submitProject = async function() {
+  const link = (document.getElementById('proj-url') || {}).value?.trim() || '';
+  const note = (document.getElementById('proj-text') || {}).value?.trim() || '';
+  await saveProject(activeCourse.numId, link, note);
+  showToast('Project Submitted! 🚀', 'Excellent! Your project has been recorded.');
+  renderProjectPanel(); renderCertReqs();
+};
+
+function renderCertReqs() {
+  if(!activeCourse) return;
+  const prog = getCourseProgress(activeCourse.numId);
+  const { lessonsOk, quizzesOk, examOk, actsOk, projOk, eligible } = checkCertEligible(activeCourse, prog);
+  const allLessons  = getAllLessonsFlat(activeCourse);
+  const allLessonIds = new Set(allLessons.map(l => l.id));
+  const doneLessons = Object.keys(prog.lessons).filter(id => allLessonIds.has(id)).length;
+  const passedQuizzes = activeCourse.quizzes.filter(q => prog.quizScores[q.id]?.passed).length;
+  const doneActs = activeCourse.activities.filter(a => {
+    const actData = prog.submissionData?.[a.id] || prog.activityGrades?.[a.id];
+    return (actData?.submitted) || prog.submittedActivities.includes(a.id);
+  }).length;
+  const reqs = [
+    { label:`Lessons (${doneLessons}/${allLessons.length})`, met: lessonsOk },
+    { label:`Quizzes Passed (${passedQuizzes}/${activeCourse.quizzes.length})`, met: quizzesOk },
+    { label:`Exam ≥ ${Math.round((activeCourse.exam.passPct||0.75)*100)}%`, met: examOk },
+    { label:`Activities (${doneActs}/${activeCourse.activities.length})`, met: actsOk },
+    { label:`Project Submitted`, met: projOk },
+  ];
+  document.getElementById('cert-reqs').innerHTML =
+    reqs.map(r => `<span class="cert-req-chip ${r.met ? 'met' : ''}">${r.met ? '✓' : '○'} ${r.label}</span>`).join('');
+  const certBtn = document.getElementById('btn-get-cert');
+  certBtn.disabled = !eligible;
+  if(eligible && !prog.certEarned) { saveCertEarned(activeCourse.numId).then(() => { renderGrid(); }); }
+}
+
+let quizState = {};
+
+window.openQuiz = function(quizId, type) {
+  let questions, title, passPct;
+  if(type === 'exam') {
+    questions = activeCourse.exam.questions; title = activeCourse.exam.title; passPct = activeCourse.exam.passPct || 0.75;
+  } else {
+    const quiz = activeCourse.quizzes.find(q => q.id === quizId);
+    questions = quiz.questions; title = quiz.title; passPct = quiz.passPct || 0.60;
+  }
+  quizState = { quizId, type, questions, passPct, current:0, answers:[], revealed:false };
+  document.getElementById('qm-title').textContent = title;
+  document.getElementById('quizModal').classList.add('open');
+  renderQuestion();
+};
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderQuestion() {
+  const { questions, current, answers } = quizState;
+  const q   = questions[current];
+  const pct = (current / questions.length) * 100;
+  document.getElementById('qm-subtitle').textContent = `Question ${current+1} of ${questions.length}`;
+  document.getElementById('qm-prog').style.width     = pct + '%';
+  document.getElementById('qm-content').innerHTML    = `
+    <div class="question-num">Question ${current+1} of ${questions.length}</div>
+    <div class="question-text">${escHtml(q.q)}</div>
+    <div class="options-list" id="opts-list">
+      ${q.opts.map((opt,i) => `<button class="option-btn ${answers[current] === i ? 'selected' : ''}" onclick="selectAnswer(${i})">${escHtml(opt)}</button>`).join('')}
+    </div>`;
+  const nav = document.getElementById('qm-nav');
+  const answered = answers.filter(a => a !== undefined).length;
+  nav.innerHTML = `
+    <button class="btn-quiz-nav secondary" onclick="quizNav(-1)" ${current===0?'disabled':''}>&#8592; Back</button>
+    <span style="font-size:0.8rem;color:var(--muted)">${answered}/${questions.length} answered</span>
+    ${current < questions.length-1
+      ? `<button class="btn-quiz-nav primary" onclick="quizNav(1)" ${answers[current]===undefined?'disabled':''}>Next &#8594;</button>`
+      : `<button class="btn-quiz-nav primary" onclick="submitQuiz()" ${answers[current]===undefined?'disabled':''}>Submit &#10003;</button>`}`;
+}
+
+window.selectAnswer = function(i) { quizState.answers[quizState.current] = i; renderQuestion(); };
+window.quizNav = function(dir) { quizState.current = Math.max(0, Math.min(quizState.questions.length-1, quizState.current + dir)); renderQuestion(); };
+
+window.submitQuiz = async function() {
+  const { quizId, type, questions, answers, passPct } = quizState;
+  let correct = 0;
+  questions.forEach((q,i) => { if(answers[i] === q.ans) correct++; });
+  const total = questions.length;
+  const pct   = Math.round(correct / total * 100);
+  const pass  = (correct / total) >= passPct;
+  const score = { score:correct, total, pct, passed:pass, passPct };
+  if(type === 'exam') {
+    await saveExamScore(activeCourse.numId, score);
+    document.getElementById('exam-done-icon').style.display = pass ? '' : 'none';
+  } else {
+    await saveQuizScore(activeCourse.numId, quizId, score);
+  }
+  renderCertReqs();
+  const passThreshold = Math.round(passPct * 100);
+  document.getElementById('qm-prog').style.width = '100%';
+  document.getElementById('qm-subtitle').textContent = 'Results';
+  document.getElementById('qm-content').innerHTML = `
+    <div class="quiz-result">
+      <div class="result-circle ${pass?'pass':'fail'}">${pct}%</div>
+      <div class="result-title">${pass ? '🎉 Passed!' : '😔 Not Quite'}</div>
+      <div class="result-sub">${pass ? 'Great job! You passed with ' + pct + '%.' : 'You scored ' + pct + '%. You need ' + passThreshold + '% to pass.'}</div>
+      <div class="result-stats">
+        <div class="result-stat"><div class="stat-val">${correct}</div><div class="stat-lbl">Correct</div></div>
+        <div class="result-stat"><div class="stat-val">${total-correct}</div><div class="stat-lbl">Wrong</div></div>
+        <div class="result-stat"><div class="stat-val">${pct}%</div><div class="stat-lbl">Score</div></div>
+        <div class="result-stat"><div class="stat-val">${passThreshold}%</div><div class="stat-lbl">Pass Mark</div></div>
+      </div>
+    </div>`;
+  document.getElementById('qm-nav').innerHTML = `
+    <button class="btn-quiz-nav secondary" onclick="closeQuizModal()">Close</button>
+    <button class="btn-quiz-nav primary" onclick="closeQuizModal(); openQuiz('${quizId}','${type}')">Retry</button>`;
+  if(pass) showToast(type==='exam' ? 'Exam Passed! 🏆' : 'Quiz Passed! ✅', `You scored ${correct}/${total} (${pct}%).`);
+  else     showToast(type==='exam' ? 'Exam Not Passed' : 'Quiz Not Passed', `You scored ${pct}%. Need ${passThreshold}% to pass.`, false);
+};
+
+window.closeQuizModal = function() {
+  document.getElementById('quizModal').classList.remove('open');
+  if(quizState.type === 'quiz') renderQuizPanel();
+  if(quizState.type === 'exam') renderExamPanel();
+};
+
+window.openCertModal = function() {
+  const prog = getCourseProgress(activeCourse.numId);
+  const { eligible } = checkCertEligible(activeCourse, prog);
+  if(!eligible) { showToast('Not Yet Eligible', 'Complete all requirements to earn your certificate.', false); return; }
+  document.getElementById('cert-modal-title').textContent = 'Congratulations, ' + (currentUser.displayName || 'Student') + '!';
+  document.getElementById('cert-modal-body').textContent  = `You have successfully completed "${activeCourse.title}" and earned your Certificate of Completion!`;
+  document.getElementById('certModal').classList.add('open');
+};
+window.closeCertModal = function() { document.getElementById('certModal').classList.remove('open'); };
+window.downloadCertificate = function() { showToast('Certificate Ready! 🎓', 'Your PDF certificate is being prepared for download.'); closeCertModal(); };
+
+function hideLoader() {
+  const loadingEl = document.getElementById('auth-loading');
+  if (!loadingEl) return;
+  loadingEl.style.opacity = '0';
+  setTimeout(() => { loadingEl.style.display = 'none'; }, 400);
+}
+
+function setUserUI(user) {
+  const name     = user.displayName || user.email || 'User';
+  const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || '?';
+  const avatarEl = document.getElementById('user-avatar-initials');
+  const nameEl   = document.getElementById('user-display-name');
+  if (avatarEl) avatarEl.textContent = initials;
+  if (nameEl)   nameEl.textContent   = name;
+}
+
+// Hard fallback: if NOTHING resolves in 8s, show page anyway
+const hardFallback = setTimeout(() => {
+  console.warn('SkillPace: hard fallback triggered');
+  hideLoader();
+  if (currentUser) renderGrid();
+}, 8000);
+
+onAuthStateChanged(auth, async (user) => {
+  clearTimeout(hardFallback);
+
+  if (!user) {
+    hideLoader();
+    window.location.href = 'welcome.html';
+    return;
+  }
+
+  currentUser = user;
+  setUserUI(user);
+
+  // Firestore with its own 5s timeout — renders page even if DB is slow
+  try {
+    const fsTimeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Firestore timeout')), 5000)
+    );
+    await Promise.race([loadFsProgress(), fsTimeout]);
+  } catch(e) {
+    console.warn('Firestore skipped:', e.message);
+    fsProgress = { lessons:{}, assessments:{} };
+  }
+
+  renderGrid();
+  hideLoader();
+});
+</script>
+</body>
+</html>

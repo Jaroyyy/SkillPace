@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Welcome | SkillPace</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold: #FBC156;
+  --gold-dark: #e8a93e;
+  --navy: #1e293b;
+  --muted: #6B7280;
+  --border: #E5E7EB;
+  --bg: #f9fafb;
+  --white: #ffffff;
+  --green: #16A34A;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--white); color: var(--navy); overflow-x: hidden; }
+
+/* ── NAVBAR ── */
+.navbar {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 40px;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-brand { display: flex; align-items: center; gap: 10px; font-family: 'Sora', sans-serif; font-weight: 800; font-size: 1.25rem; color: var(--navy); text-decoration: none; }
+.nav-brand img { height: 38px; }
+.nav-actions { display: flex; gap: 10px; align-items: center; }
+.btn-nav-login { padding: 9px 20px; border-radius: 8px; font-weight: 600; font-size: 0.88rem; text-decoration: none; border: 1.5px solid var(--border); color: var(--navy); background: transparent; transition: all 0.2s; }
+.btn-nav-login:hover { border-color: var(--navy); }
+.btn-nav-register { padding: 9px 20px; border-radius: 8px; font-weight: 700; font-size: 0.88rem; text-decoration: none; background: var(--gold); color: var(--navy); transition: all 0.2s; }
+.btn-nav-register:hover { background: var(--gold-dark); }
+
+/* ── HERO ── */
+.hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+  color: white; text-align: center;
+  padding: 160px 20px 140px; position: relative; overflow: hidden;
+}
+.hero::before { content:''; position:absolute; top:-100px; right:-100px; width:500px; height:500px; background:radial-gradient(circle, rgba(251,193,86,0.15) 0%, transparent 65%); border-radius:50%; pointer-events:none; }
+.hero::after { content:''; position:absolute; bottom:-80px; left:-80px; width:400px; height:400px; background:radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 65%); border-radius:50%; pointer-events:none; }
+.hero-content { position: relative; z-index: 1; max-width: 750px; margin: 0 auto; }
+.hero-badge { display: inline-block; background: rgba(251,193,86,0.2); color: var(--gold); border: 1px solid rgba(251,193,86,0.4); border-radius: 999px; padding: 6px 18px; font-size: 0.75rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 22px; }
+.hero h1 { font-family: 'Sora', sans-serif; font-size: clamp(2.2rem, 5vw, 3.8rem); font-weight: 800; line-height: 1.1; margin-bottom: 18px; }
+.hero h1 span { color: var(--gold); }
+.hero p { font-size: 1.1rem; opacity: 0.8; margin-bottom: 36px; max-width: 480px; margin-left: auto; margin-right: auto; }
+.btn { display: inline-block; padding: 15px 30px; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 1rem; text-decoration: none; cursor: pointer; border: none; transition: all 0.25s; margin: 6px; }
+.btn-gold { background: var(--gold); color: var(--navy); }
+.btn-gold:hover { background: var(--gold-dark); transform: translateY(-2px); }
+.btn-outline { background: transparent; color: white; border: 2px solid rgba(255,255,255,0.5); }
+.btn-outline:hover { background: rgba(255,255,255,0.1); border-color: white; }
+.trust-bar { display: flex; align-items: center; justify-content: center; gap: 26px; margin-top: 44px; flex-wrap: wrap; }
+.trust-item { display: flex; align-items: center; gap: 7px; opacity: 0.7; font-size: 0.88rem; }
+.trust-divider { opacity: 0.2; font-size: 1.2rem; }
+
+/* ── FEATURES ── */
+.features { padding: 100px 20px; text-align: center; }
+.section-label { font-size: 0.75rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-dark); margin-bottom: 10px; }
+.section-title { font-family: 'Sora', sans-serif; font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 800; margin-bottom: 12px; }
+.section-sub { color: var(--muted); font-size: 1rem; max-width: 480px; margin: 0 auto 48px; }
+.feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; max-width: 960px; margin: 0 auto; }
+.feat-card { background: var(--bg); border: 1px solid var(--border); border-radius: 14px; padding: 30px 22px; text-align: left; transition: transform 0.2s, box-shadow 0.2s; }
+.feat-card:hover { transform: translateY(-5px); box-shadow: 0 18px 36px rgba(0,0,0,0.07); }
+.feat-icon { width: 48px; height: 48px; background: rgba(251,193,86,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; margin-bottom: 16px; }
+.feat-card h3 { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 1.05rem; margin-bottom: 8px; }
+.feat-card p { color: var(--muted); font-size: 0.92rem; line-height: 1.6; }
+
+/* ── PRICING ── */
+.pricing-section { background: var(--bg); padding: 100px 20px; border-top: 1px solid var(--border); }
+.plans-wrap { display: flex; gap: 22px; justify-content: center; flex-wrap: wrap; margin-top: 48px; }
+.plan-card { background: var(--white); border: 2px solid var(--border); border-radius: 20px; padding: 38px 30px; width: 295px; position: relative; display: flex; flex-direction: column; transition: all 0.3s; }
+.plan-card:hover { box-shadow: 0 18px 48px rgba(0,0,0,0.07); }
+.plan-card.featured { border-color: var(--gold); transform: scale(1.04); box-shadow: 0 28px 56px rgba(251,193,86,0.18); }
+.popular-badge { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); background: var(--gold); color: var(--navy); padding: 4px 18px; border-radius: 999px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+.plan-name { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 1.25rem; margin-bottom: 5px; }
+.plan-desc { font-size: 0.88rem; color: var(--muted); margin-bottom: 18px; }
+.plan-price { font-family: 'Sora', sans-serif; font-size: 2.8rem; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+.plan-price sup { font-size: 1.3rem; vertical-align: super; }
+.plan-price span { font-size: 1rem; color: var(--muted); font-weight: 500; }
+.plan-billing { font-size: 0.82rem; color: var(--muted); margin-bottom: 26px; }
+.plan-features { list-style: none; margin-bottom: 28px; flex: 1; }
+.plan-features li { display: flex; align-items: flex-start; gap: 9px; font-size: 0.9rem; padding: 7px 0; border-bottom: 1px solid var(--border); color: var(--navy); }
+.plan-features li:last-child { border-bottom: none; }
+.plan-features li::before { content: '✓'; color: var(--green); font-weight: 800; font-size: 0.82rem; flex-shrink: 0; margin-top: 1px; }
+.plan-features li.cross::before { content: '✗'; color: #D1D5DB; }
+.plan-features li.cross { color: var(--muted); }
+.btn-plan { width: 100%; padding: 14px; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s; }
+.btn-plan-navy { background: var(--navy); color: white; }
+.btn-plan-navy:hover { background: #0f1827; }
+.btn-plan-gold { background: var(--gold); color: var(--navy); }
+.btn-plan-gold:hover { background: var(--gold-dark); }
+.btn-plan-ghost { background: var(--bg); color: var(--muted); cursor: default; }
+
+/* ── COMPARISON TABLE ── */
+.compare-wrap { max-width: 860px; margin: 50px auto 0; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; background: var(--white); }
+.compare-wrap table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.compare-wrap thead { background: var(--navy); color: white; }
+.compare-wrap thead th { padding: 15px 18px; text-align: center; font-family: 'Sora', sans-serif; font-weight: 700; }
+.compare-wrap thead th:first-child { text-align: left; }
+.compare-wrap tbody td { padding: 13px 18px; text-align: center; border-bottom: 1px solid var(--border); }
+.compare-wrap tbody td:first-child { text-align: left; font-weight: 600; }
+.compare-wrap tbody tr:nth-child(even) { background: var(--bg); }
+.compare-wrap tbody tr:last-child td { border-bottom: none; }
+.ck { color: var(--green); font-weight: 800; }
+.cx { color: #D1D5DB; font-weight: 800; }
+.compare-wrap .hl { background: rgba(251,193,86,0.06); }
+
+/* ── FAQ ── */
+.faq-wrap { max-width: 740px; margin: 80px auto; padding: 0 20px; }
+.faq-item { border: 1px solid var(--border); border-radius: 12px; margin-bottom: 14px; background: white; transition: box-shadow 0.2s; }
+.faq-item:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.05); }
+.faq-q { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; font-weight: 700; font-size: 0.97rem; cursor: pointer; color: var(--navy); user-select: none; }
+.faq-arrow { transition: transform 0.3s; flex-shrink: 0; opacity: 0.5; }
+.faq-item.open .faq-arrow { transform: rotate(180deg); opacity: 1; }
+.faq-a { display: none; padding: 0 22px 18px; color: var(--muted); line-height: 1.7; font-size: 0.92rem; border-top: 1px solid var(--border); padding-top: 14px; }
+.faq-item.open .faq-a { display: block; }
+
+/* ── PAYMENT MODAL ──
+   Covers the full screen with a semi-transparent backdrop.
+   display:none by default; .show switches it to display:flex.
+*/
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6); z-index: 9998;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.show { display: flex; }
+.modal-box {
+  background: white; border-radius: 20px; padding: 38px;
+  width: 100%; max-width: 480px; margin: 20px;
+  position: relative; box-shadow: 0 30px 80px rgba(0,0,0,0.25);
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
+.modal-close { position: absolute; top: 16px; right: 18px; background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--muted); line-height:1; }
+.modal-close:hover { color: var(--navy); }
+.modal-plan-badge { display: inline-block; background: rgba(251,193,86,0.15); color: #b27b00; border: 1px solid rgba(251,193,86,0.4); border-radius: 999px; padding: 4px 13px; font-size: 0.77rem; font-weight: 700; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+.modal-box h2 { font-family: 'Sora', sans-serif; font-size: 1.55rem; font-weight: 800; margin-bottom: 5px; }
+.modal-price-line { font-size: 0.9rem; color: var(--muted); margin-bottom: 24px; }
+
+/*
+  DEMO NOTICE BOX
+  We show a clear, honest notice that this is a demo form.
+  In production you would replace this form with a real
+  payment provider (like PayMongo, which supports GCash,
+  Maya, and cards in the Philippines).
+*/
+.demo-notice {
+  background: #FEF9C3; border: 1px solid #FDE68A;
+  border-radius: 10px; padding: 13px 16px; margin-bottom: 20px;
+  font-size: 0.83rem; color: #92400E; line-height: 1.55;
+}
+.demo-notice strong { display: block; margin-bottom: 3px; }
+
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 0.83rem; font-weight: 600; margin-bottom: 5px; color: var(--navy); }
+.form-group input, .form-group select {
+  width: 100%; padding: 12px 14px; border: 1.5px solid var(--border);
+  border-radius: 10px; font-family: 'DM Sans', sans-serif;
+  font-size: 0.92rem; color: var(--navy); background: var(--bg);
+  transition: border-color 0.2s; outline: none;
+}
+.form-group input:focus, .form-group select:focus { border-color: var(--gold); background: white; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.secure-note { display: flex; align-items: center; gap: 7px; font-size: 0.8rem; color: var(--muted); margin-top: 12px; justify-content: center; }
+.btn-pay { width: 100%; padding: 15px; background: var(--navy); color: white; border: none; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 18px; transition: all 0.2s; }
+.btn-pay:hover { background: #0f1827; }
+.btn-pay:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+
+/* Success screen shown after payment completes */
+.success-state { display: none; text-align: center; padding: 16px 0; animation: slideUp 0.4s ease; }
+.success-icon { width: 68px; height: 68px; background: rgba(22,163,74,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 18px; }
+.success-state h3 { font-family: 'Sora', sans-serif; font-size: 1.45rem; font-weight: 800; margin-bottom: 9px; }
+.success-state p { color: var(--muted); line-height: 1.65; font-size: 0.93rem; }
+
+/* ── TOAST ── */
+#toast { position: fixed; bottom: 28px; right: 28px; z-index: 9999; background: white; border: 1px solid var(--border); border-left: 4px solid var(--gold); border-radius: 12px; padding: 15px 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.12); opacity: 0; transform: translateY(20px); pointer-events: none; transition: all 0.3s; display: flex; align-items: center; gap: 12px; max-width: 310px; }
+#toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+footer { text-align: center; padding: 38px 20px; color: var(--muted); border-top: 1px solid var(--border); background: var(--bg); font-size: 0.88rem; line-height: 2; }
+
+@media (max-width: 768px) {
+  .navbar { padding: 14px 20px; }
+  .feature-grid { grid-template-columns: 1fr; }
+  .plan-card.featured { transform: scale(1); }
+  .form-row { grid-template-columns: 1fr; }
+  .compare-wrap { overflow-x: auto; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a class="nav-brand" href="welcome.html">
+    <img src="https://uploads.onecompiler.io/44hg23thx/44hg24bdt/zxc.png" alt="SkillPace">
+    SkillPace
+  </a>
+  <div class="nav-actions">
+    <a href="login.html" class="btn-nav-login">Log In</a>
+    <a href="register.html" class="btn-nav-register">Get Started Free</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">✦ Online Learning Platform</div>
+    <h1>Learn Skills at <span>Your Own</span> Pace</h1>
+    <p>Courses, live tutoring, and a student community — all in one place. Start free, upgrade when you're ready.</p>
+    <a href="register.html" class="btn btn-gold">Start Learning Free</a>
+    <a href="login.html" class="btn btn-outline">I already have an account</a>
+    <div class="trust-bar">
+      <div class="trust-item"> No credit card required</div>
+      <div class="trust-divider">·</div>
+      <div class="trust-item"> Secure &amp; private</div>
+      <div class="trust-divider">·</div>
+      <div class="trust-item"> Cancel anytime</div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<div class="features">
+  <div class="section-label">Platform Features</div>
+  <h2 class="section-title">Why Students Choose SkillPace</h2>
+  <p class="section-sub">Everything you need to learn, connect, and grow — all in one place.</p>
+  <div class="feature-grid">
+    <div class="feat-card"><div class="feat-icon"></div><h3>Structured Courses</h3><p>Learn HTML, CSS, Python, Java, and more — with step-by-step lessons built by experts.</p></div>
+    <div class="feat-card"><div class="feat-icon"></div><h3>Live 1-on-1 Tutoring</h3><p>Book sessions with experienced tutors and get personalized help exactly when you need it.</p></div>
+    <div class="feat-card"><div class="feat-icon"></div><h3>Student Community</h3><p>Real-time chat with fellow learners in subject-specific groups. Collaborate and grow together.</p></div>
+    <div class="feat-card"><div class="feat-icon"></div><h3>Progress Tracking</h3><p>Your dashboard shows enrolled courses, completed lessons, quizzes passed, and upcoming sessions.</p></div>
+    <div class="feat-card"><div class="feat-icon"></div><h3>Certificates</h3><p>Earn certificates for completed courses. Add them to your portfolio or resume.</p></div>
+    <div class="feat-card"><div class="feat-icon"></div><h3>Study Anywhere</h3><p>SkillPace works on any device — desktop, tablet, or phone. Learn on your own schedule.</p></div>
+  </div>
+</div>
+
+<!-- PRICING -->
+<div class="pricing-section">
+  <div style="text-align:center">
+    <div class="section-label">Pricing Plans</div>
+    <h2 class="section-title">Choose Your Learning Plan</h2>
+    <p class="section-sub">Start free and upgrade when you need more. No hidden fees.</p>
+  </div>
+
+  <div class="plans-wrap">
+    <!-- BASIC -->
+    <div class="plan-card">
+      <div class="plan-name">Basic</div>
+      <div class="plan-desc">Great for getting started</div>
+      <div class="plan-price">$0</div>
+      <div class="plan-billing">Free forever</div>
+      <ul class="plan-features">
+        <li>1 free course</li>
+        <li>Community chat access</li>
+        <li>Basic progress tracking</li>
+        <li class="cross">Priority tutor booking</li>
+        <li class="cross">Certificates</li>
+        <li class="cross">Career guidance</li>
+      </ul>
+      <a href="register.html" class="btn-plan btn-plan-ghost" style="text-align:center;display:block;text-decoration:none;line-height:2.6;">Get Started Free</a>
+    </div>
+
+    <!-- SEMESTER (featured) -->
+    <div class="plan-card featured">
+      <div class="popular-badge">⭐ Most Popular</div>
+      <div class="plan-name">Semester Pass</div>
+      <div class="plan-desc">Best for active learners</div>
+      <div class="plan-price"><sup>$</sup>99 <span>/semester</span></div>
+      <div class="plan-billing">Billed once per 6 months</div>
+      <ul class="plan-features">
+        <li>Up to 5 courses</li>
+        <li>Unlimited enrollments</li>
+        <li>Priority tutor booking</li>
+        <li>Certificate eligibility</li>
+        <li>Community chat access</li>
+        <li class="cross">Career guidance sessions</li>
+      </ul>
+      <!--
+        onclick="openModal('semester')" opens the payment modal.
+        We pass the plan key so the modal knows what to display.
+      -->
+      <button class="btn-plan btn-plan-gold" onclick="openModal('semester')">Subscribe Now</button>
+    </div>
+
+    <!-- ANNUAL -->
+    <div class="plan-card">
+      <div class="plan-name">Annual Pass</div>
+      <div class="plan-desc">Best value for serious learners</div>
+      <div class="plan-price"><sup>$</sup>199 <span>/year</span></div>
+      <div class="plan-billing">Billed annually — save 20%</div>
+      <ul class="plan-features">
+        <li>Everything in Semester Pass</li>
+        <li>Unlimited courses</li>
+        <li>Priority tutor booking</li>
+        <li>5% discount on tutoring</li>
+        <li>Career guidance sessions</li>
+        <li>Early access to new courses</li>
+      </ul>
+      <button class="btn-plan btn-plan-navy" onclick="openModal('annual')">Subscribe Now</button>
+    </div>
+  </div>
+
+  <!-- COMPARISON TABLE -->
+  <div class="compare-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Basic</th>
+          <th style="background:rgba(251,193,86,0.25);color:var(--gold)">Semester</th>
+          <th>Annual</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Courses included</td><td>1</td><td class="hl">5</td><td>Unlimited</td></tr>
+        <tr><td>Priority tutor booking</td><td><span class="cx">✗</span></td><td class="hl"><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+        <tr><td>Certificates</td><td><span class="cx">✗</span></td><td class="hl"><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+        <tr><td>Tutoring discount</td><td><span class="cx">✗</span></td><td class="hl"><span class="cx">✗</span></td><td>5% off</td></tr>
+        <tr><td>Career guidance</td><td><span class="cx">✗</span></td><td class="hl"><span class="cx">✗</span></td><td><span class="ck">✓</span></td></tr>
+        <tr><td>Community access</td><td><span class="ck">✓</span></td><td class="hl"><span class="ck">✓</span></td><td><span class="ck">✓</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- FAQ -->
+<div class="faq-wrap">
+  <div style="text-align:center;margin-bottom:38px;">
+    <div class="section-label">FAQ</div>
+    <h2 class="section-title">Common Questions</h2>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">Can I cancel my subscription anytime?
+      <svg class="faq-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="faq-a">Yes. You can cancel at any time from your account settings. Your access continues until the end of the billing period — no mid-cycle charges.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">What happens to my progress if I downgrade?
+      <svg class="faq-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="faq-a">Your progress is always saved and never deleted. Certificates you've already earned remain valid forever. You just won't access premium-only courses until you resubscribe.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">Is my payment information safe?
+      <svg class="faq-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="faq-a">Yes. In a production deployment, all payments would be processed through a certified payment provider (such as PayMongo for GCash/Maya/cards in the Philippines). Card numbers would never touch SkillPace's own servers — they'd be tokenized securely by the provider.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">Can I upgrade from Semester to Annual mid-plan?
+      <svg class="faq-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="faq-a">Yes! You can upgrade at any time. We'll apply a prorated credit for the remaining Semester period toward your Annual plan automatically.</div>
+  </div>
+</div>
+
+<!-- PAYMENT MODAL -->
+<div class="modal-overlay" id="payModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+
+    <!-- FORM STATE -->
+    <div id="formState">
+      <div class="modal-plan-badge" id="modalPlanName">Semester Pass</div>
+      <h2>Complete Your Purchase</h2>
+      <p class="modal-price-line" id="modalPlanPrice">$99 / semester · billed once every 6 months</p>
+
+    
+      <div class="demo-notice">
+        <strong>⚠️ Demo Mode — No real payment is processed</strong>
+        This form simulates a checkout flow for learning purposes.
+        To accept real payments, SkillPace would integrate a payment
+        provider like <strong>PayMongo</strong> (supports GCash, Maya, cards — ideal for the Philippines).
+      </div>
+
+      <div class="form-group">
+        <label>Full Name on Card</label>
+        <input type="text" id="cardName" placeholder="e.g. Juan dela Cruz">
+      </div>
+      <div class="form-group">
+        <label>Card Number</label>
+        
+        <input type="text" id="cardNum" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCard(this)">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Expiry</label>
+          <input type="text" id="cardExp" placeholder="MM / YY" maxlength="7" oninput="formatExpiry(this)">
+        </div>
+        <div class="form-group">
+          <label>CVV</label>
+          <input type="text" id="cardCvv" placeholder="•••" maxlength="3">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="payEmail" placeholder="you@example.com">
+      </div>
+      <div class="secure-note"> Demo only — no real charge will occur</div>
+      <button class="btn-pay" id="payBtn" onclick="processPayment()">Simulate Payment</button>
+    </div>
+
+    <!-- SUCCESS STATE (shown after simulate button clicked) -->
+    <div class="success-state" id="successState">
+      <div class="success-icon">🎉</div>
+      <h3>Subscription Simulated!</h3>
+      <p>
+        In a real deployment, you would now be subscribed to
+        <strong id="successPlan">Semester Pass</strong> and your account
+        would be upgraded in Firebase automatically via a webhook
+        from the payment provider.
+      </p>
+      <br>
+      <button class="btn-pay" onclick="window.location.href='login.html'" style="margin-top:0;">Go to My Account →</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast">
+  <span style="font-size:1.3rem" id="toast-icon"></span>
+  <div>
+    <div id="toast-title" style="font-weight:700;font-size:0.92rem;margin-bottom:2px;color:var(--navy);"></div>
+    <div id="toast-desc" style="font-size:0.82rem;color:var(--muted);"></div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  Contact us: +63 995 223 1266 &nbsp;|&nbsp; Email: AtSkillPace@gmail.com<br>
+  © 2026 SkillPace. All rights reserved.
+</footer>
+
+<script>
+/*
+  Plan data — keyed by the string passed to openModal()
+*/
+const PLANS = {
+  semester: { name: 'Semester Pass', price: '$99 / semester · billed every 6 months', label: 'Semester Pass' },
+  annual:   { name: 'Annual Pass',   price: '$199 / year · billed annually',           label: 'Annual Pass'   },
+};
+let selectedPlan = 'semester';
+
+/*
+  openModal(planKey)
+  Shows the payment modal and fills in the correct plan details.
+  document.body.style.overflow = 'hidden' prevents the page
+  behind the modal from scrolling while it's open.
+*/
+function openModal(planKey) {
+  selectedPlan = planKey;
+  const plan = PLANS[planKey];
+  document.getElementById('modalPlanName').textContent  = plan.name;
+  document.getElementById('modalPlanPrice').textContent = plan.price;
+  document.getElementById('successPlan').textContent    = plan.label;
+  document.getElementById('formState').style.display    = 'block';
+  document.getElementById('successState').style.display = 'none';
+  document.getElementById('payBtn').disabled    = false;
+  document.getElementById('payBtn').textContent = 'Simulate Payment';
+  document.getElementById('payModal').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('payModal').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+/* Click outside the modal box to close it */
+document.getElementById('payModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+/*
+  processPayment()
+  Validates fields then simulates a 1.8-second processing delay.
+  In production: this is where you'd call your backend, which
+  would call PayMongo/Stripe API and return a result.
+*/
+function processPayment() {
+  const name  = document.getElementById('cardName').value.trim();
+  const num   = document.getElementById('cardNum').value.trim();
+  const exp   = document.getElementById('cardExp').value.trim();
+  const cvv   = document.getElementById('cardCvv').value.trim();
+  const email = document.getElementById('payEmail').value.trim();
+
+  if (!name || !num || !exp || !cvv || !email) {
+    showToast('⚠️', 'Missing fields', 'Please fill in all fields to continue.');
+    return;
+  }
+
+  const btn = document.getElementById('payBtn');
+  btn.disabled = true;
+  btn.textContent = 'Processing…';
+
+  /*
+    setTimeout(fn, ms) — wait ms milliseconds then run fn.
+    Simulates a network call to a payment API.
+  */
+  setTimeout(() => {
+    document.getElementById('formState').style.display    = 'none';
+    document.getElementById('successState').style.display = 'block';
+    showToast('🎉', 'Simulated!', `This would activate ${PLANS[selectedPlan].label}.`);
+  }, 1800);
+}
+
+/*
+  formatCard — auto-inserts spaces every 4 digits
+  "1234567890123456" → "1234 5678 9012 3456"
+
+  .replace(/\D/g, '')  removes everything that isn't a digit (\D = non-digit)
+  .replace(/(.{4})/g, '$1 ')  inserts a space after every 4 characters
+  .trim()  removes the trailing space
+*/
+function formatCard(input) {
+  let v = input.value.replace(/\D/g, '').substring(0, 16);
+  input.value = v.replace(/(.{4})/g, '$1 ').trim();
+}
+
+/*
+  formatExpiry — formats input as "MM / YY"
+  Strips non-digits, then inserts " / " after the 2nd digit.
+*/
+function formatExpiry(input) {
+  let v = input.value.replace(/\D/g, '').substring(0, 4);
+  if (v.length >= 3) v = v.substring(0,2) + ' / ' + v.substring(2);
+  input.value = v;
+}
+
+/*
+  toggleFaq — adds/removes the .open class on the parent .faq-item.
+  CSS handles the animation: the arrow rotates and the answer shows
+  only when .open is present.
+*/
+function toggleFaq(el) {
+  el.parentElement.classList.toggle('open');
+}
+
+let toastTimer;
+function showToast(icon, title, desc) {
+  document.getElementById('toast-icon').textContent  = icon;
+  document.getElementById('toast-title').textContent = title;
+  document.getElementById('toast-desc').textContent  = desc;
+  const el = document.getElementById('toast');
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 4000);
+}
+</script>
+</body>
+</html>
